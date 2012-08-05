@@ -23,7 +23,7 @@ Crafty.scene("loading", function() {
   text.text("Loading").css({"text-align": "center", "color": "white", "font-size": "20px"});
 
   Crafty.load(["images/tiles.png", "images/players.png"], function() {
-    Crafty.socket = io.connect('http://jcwilk-genesis.herokuapp.com');
+    Crafty.socket = io.connect(document.URL);
 
     Crafty.scene("main"); // When everything is loaded, run the main scene
   });
