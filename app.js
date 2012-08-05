@@ -4,8 +4,8 @@ var io = require('socket.io');
 var app = module.exports = express.createServer()
   , io = io.listen(app);
 
-// assuming io is the Socket.IO server object
-io.configure(function () {
+// Heroku doesn't support websockets
+io.configure('production', function () {
   io.set("transports", ["xhr-polling"]);
   io.set("polling duration", 10);
 });
@@ -36,14 +36,34 @@ app.listen(port);
 console.log("...aaaand we're up! (port: %d env: %s)", app.address().port, app.settings.env);
 
 // Events
-var players = 0;
+var playerManager = function(){
+  ids = [];
+  idAutoInc = 0;
+  return {
+    create: function(){
+      ids.push(idAutoInc);
+      return idAutoInc++;
+    },
+    destroy: function(id){
+      index = ids.indexOf(id);
+      if(index >= 0){
+        ids.splice(index,1);
+        return true;
+      }
+      return false;
+    },
+    all: function(){
+      return ids.slice(0);
+    }
+  }
+}();
 
 io.sockets.on('connection', function (socket) {
-  socket.on('register_player', function(data) {
-    socket.emit("load_current_players", {"players": players})
-    socket.broadcast.emit("player_joined")
-    players++;
-  })
+  var playerId = playerManager.create();
+
+  socket.emit('set_player_id', playerId);
+  socket.emit('load_current_players', {players: playerManager.all()})
+  socket.broadcast.emit("player_joined", playerId);
 
   socket.on('keydown', function (data) {
     socket.broadcast.emit("keydown", data);
@@ -54,6 +74,7 @@ io.sockets.on('connection', function (socket) {
   });
 
   socket.on('disconnect', function () {
-    players--;
+    socket.broadcast.emit('player_quit', playerId);
+    playerManager.destroy(playerId);
   });
 });
