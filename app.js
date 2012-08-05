@@ -5,7 +5,7 @@ var app = module.exports = express.createServer()
   , io = io.listen(app);
 
 // Heroku doesn't support websockets
-io.configure('production', function () {
+io.configure(function() {
   io.set("transports", ["xhr-polling"]);
   io.set("polling duration", 10);
 });
