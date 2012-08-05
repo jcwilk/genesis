@@ -65,13 +65,10 @@ io.sockets.on('connection', function (socket) {
   socket.emit('load_current_players', {players: playerManager.all()})
   socket.broadcast.emit("player_joined", playerId);
 
-  socket.on('keydown', function (data) {
-    socket.broadcast.emit("keydown", data);
-  });
-
-  socket.on('keyup', function (data) {
-    socket.broadcast.emit("keyup", data);
-  });
+  socket.on('new_direction', function(data){
+    data.id = playerId;
+    socket.broadcast.emit('player_movement', data)
+  })
 
   socket.on('disconnect', function () {
     socket.broadcast.emit('player_quit', playerId);
