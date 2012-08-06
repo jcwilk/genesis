@@ -23,7 +23,7 @@ Crafty.scene("main", function() {
     if(currentPlayerId === undefined){
       currentPlayerId = data;
     
-      player = Crafty.e("LocalAvatar");
+      player = Crafty.e("LocalAvatar").seedId(data);
 
       // After Joining the server sends data with all the current players and their positions so the client loads them into the map.
       // Don't set up listeners that depend on the knowledge of other players until this happens.
@@ -33,7 +33,7 @@ Crafty.scene("main", function() {
 
           for(var i = 0; i < data.players.length; i++) {
             var id = data.players[i];
-            if(id != currentPlayerId) players[id] = Crafty.e("RemoteAvatar");
+            if(id != currentPlayerId) players[id] = Crafty.e("RemoteAvatar").seedId(id);
           }
 
           Crafty.socket.on("player_quit", function(data) {
@@ -56,7 +56,7 @@ Crafty.scene("main", function() {
 
           // Add a new player to the map when a user joins the game.
           Crafty.socket.on("player_joined", function(data) {
-            if(data != currentPlayerId) players[data] = Crafty.e("RemoteAvatar");
+            if(data != currentPlayerId) players[data] = Crafty.e("RemoteAvatar").seedId(data);
           });
         }
       });

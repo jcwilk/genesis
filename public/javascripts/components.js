@@ -7,36 +7,52 @@ Crafty.sprite(32, "images/tiles.png", {
   dirt:   [8,0],
 });
 
-// FIXME: Make working with sprites easier.. this is insane.
+//Each sprite is 32x48
+//Total image size is 384x384
+//Represents 8 players, 4 across 2 high
+//Each player has 4 rows of 3 images each
+//The center image of the top row is the best default image
 Crafty.sprite(1,"images/players.png", {
-  player0: [0,0, 31, 45],
-  player1: [31*3,0, 31, 45],
-  player2: [0,49*4, 31, 45],
-  player3: [33*4,49*4, 31, 45]
+  player0: [32,0, 32, 48],
+  player1: [32*4,0, 32, 48],
+  player2: [32,48*4, 32, 48],
+  player3: [32*4,48*4, 32, 48],
+  player4: [32*7,0, 32, 48],
+  player5: [32*10,0, 32, 48],
+  player6: [32*7,48*4, 32, 48],
+  player7: [32*10,48*4, 32, 48]
 });
+
+
 
 Crafty.c("Avatar", {
   init: function() {
-    this.spritePositions = [ [0,0], [31*3,0], [0,49*4], [32*3, 49*4] ];
-    this.spriteId = Crafty.math.randomInt(0,3);
+    this.requires("2D, Canvas, SpriteAnimation, RightControls")
+    
+    return this;
+  },
+  seedId: function(seedId) {
+    var spriteId = seedId%8
+    var spritePositions = [ [0,0], [32*3,0], [0,48*4], [32*3, 48*4], [32*6,0], [32*9,0], [32*6,48*4], [32*9, 48*4] ];
+    //var spriteId = Crafty.math.randomInt(0,7);
 
-    var pos = this.spritePositions[this.spriteId];
+    var pos = spritePositions[spriteId];
 
     // The animation is based on this Sprite: images/players.png
     // The animation needs an array like [[x,y,width,height]].
-    this.movementAnimation = {
-      "down":  [ [pos[0], pos[1], 33, 45], [pos[0] + 33, pos[1], 33, 45], [pos[0] + 62, pos[1], 33, 45] ],
-      "left":  [ [pos[0], pos[1] + 45, 31, 45], [pos[0] + 31, pos[1] + 45, 31, 45], [pos[0] + 62, pos[1]+45, 31, 45] ],
-      "right": [ [pos[0], pos[1]+94, 31, 45], [pos[0] + 31, pos[1]+94, 31, 45], [pos[0] + 62, pos[1]+94, 31, 45] ],
-      "up":    [ [pos[0], pos[1]+140, 31, 45], [pos[0] + 31, pos[1]+140, 31, 45], [pos[0] + 62, pos[1]+140, 31, 45] ],
+    var movementAnimation = {
+      "down":  [ [pos[0], pos[1], 32, 48], [pos[0] + 32, pos[1], 32, 48], [pos[0] + (32*2), pos[1], 32, 48] ],
+      "left":  [ [pos[0], pos[1] + 48, 32, 48], [pos[0] + 32, pos[1] + 48, 32, 48], [pos[0] + (32*2), pos[1]+48, 32, 48] ],
+      "right": [ [pos[0], pos[1]+(48*2), 32, 48], [pos[0] + 32, pos[1]+(48*2), 32, 48], [pos[0] + (32*2), pos[1]+(48*2), 32, 48] ],
+      "up":    [ [pos[0], pos[1]+(48*3), 32, 48], [pos[0] + 32, pos[1]+(48*3), 32, 48], [pos[0] + (32*2), pos[1]+(48*3), 32, 48] ],
     };
 
-    this.requires("2D, Canvas, SpriteAnimation, RightControls, player"+this.spriteId)
+    this.requires('player'+spriteId)
       .attr({x: 400, y: 320, z:1}) // Make new players appear in the center of the map.
-      .animate("walk_down",  this.movementAnimation.down)
-      .animate("walk_left",  this.movementAnimation.left)
-      .animate("walk_right", this.movementAnimation.right)
-      .animate("walk_up",    this.movementAnimation.up)
+      .animate("walk_down",  movementAnimation.down)
+      .animate("walk_left",  movementAnimation.left)
+      .animate("walk_right", movementAnimation.right)
+      .animate("walk_up",    movementAnimation.up)
       .bind("NewDirection", function (direction) {
         if (direction.x < 0) {
           if (!this.isPlaying("walk_left"))
