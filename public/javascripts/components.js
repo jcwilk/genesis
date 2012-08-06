@@ -28,14 +28,10 @@ Crafty.sprite(1,"images/players.png", {
 Crafty.c("Avatar", {
   init: function() {
     this.requires("2D, Canvas, SpriteAnimation, RightControls")
-    
-    return this;
   },
   seedId: function(seedId) {
     var spriteId = seedId%8
     var spritePositions = [ [0,0], [32*3,0], [0,48*4], [32*3, 48*4], [32*6,0], [32*9,0], [32*6,48*4], [32*9, 48*4] ];
-    //var spriteId = Crafty.math.randomInt(0,7);
-
     var pos = spritePositions[spriteId];
 
     // The animation is based on this Sprite: images/players.png
