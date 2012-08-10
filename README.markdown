@@ -18,6 +18,29 @@ Also, this now works on heroku. Just run something like the following commands t
 	heroku logs (look for "State changed from starting to up" at the end)
 	heroku open (or just go to the url in your web browser from the output of those commands)
 
-Note: I'm not currently able to see other players in the game (on local or heroku) but it may very well be due to the changes I made to get it running for me locally and on heroku.
+Note: AFAIK heroku doesn't currently support websockets so I have it limited to xhr long polling, which as long as you're not continuously streaming data isn't bad at all. I could imagine it having a noticable impact on a sketchy connection like mobile though.
 
-Needless to say, there are probable 2 billion bugs in this code.. but it's just a draft to look into the possibilities of node,socket.io and crafty in general.
+Known bugs:
+- Doesn't get past "Loading" on a Samsung Galaxy S2
+- If a window is left alone for a long time it eventually gets confused about which character is which, or at least about which sprite set they are
+- When joining existing players, the existing players appear stacked in the center to the new player until they move
+
+Features coming soon:
+- Collision detection
+- Server side room data
+- Chat
+- Server side tracking of player positions (rather than just rebroadcasting and discarding)
+- Scrolling map rather than static room
+- Server side heuristics to detect cheaters (specifically, forging your location)
+- Hazards/Death/Respawning
+
+Planned delegation to a rails server:
+- Player persistence
+- Movement validation (anti cheat)
+- Entity tracking (mobs, items, etc)
+- Admin interface for editing rooms
+- Player cookie-based authentication
+- Limit information to line of sight
+
+Special thanks
+- Lucas Nasif ( http://lucasnasif.com/ ) for the idea and implementation of combining socket.io with craftyjs. This is his project that I've, at least for the time being, picked up and as you can see from above, have great ambitions for :D
