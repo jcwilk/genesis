@@ -1,4 +1,4 @@
-INSTALL
+Dev setup
 =======
 
 You need to install nodejs and ought to install npm.
@@ -20,12 +20,16 @@ Also, this now works on heroku. Just run something like the following commands t
 
 Note: AFAIK heroku doesn't currently support websockets so I have it limited to xhr long polling, which as long as you're not continuously streaming data isn't bad at all. I could imagine it having a noticable impact on a sketchy connection like mobile though.
 
-Known bugs:
+
+Known bugs
+=======
 - Doesn't get past "Loading" on a Samsung Galaxy S2
 - If a window is left alone for a long time it eventually gets confused about which character is which, or at least about which sprite set they are
 - When joining existing players, the existing players appear stacked in the center to the new player until they move
 
-Features coming soon:
+
+Features coming soon
+=======
 - Collision detection
 - Server side room data
 - Chat
@@ -34,7 +38,9 @@ Features coming soon:
 - Server side heuristics to detect cheaters (specifically, forging your location)
 - Hazards/Death/Respawning
 
-Planned delegation to a rails server:
+
+Planned delegation to a rails server
+=======
 - Player persistence
 - Movement validation (anti cheat)
 - Entity tracking (mobs, items, etc)
@@ -42,5 +48,14 @@ Planned delegation to a rails server:
 - Player cookie-based authentication
 - Limit information to line of sight
 
+Pull request dogma
+=======
+- Make a branch and get it in sync with master of this repo (either rebase or cherry pick)
+- Include only the code you want to contribute on top of that
+- Please thoroughly test the code before sending it over as "correct", or alternatively, make a note about its limitations
+- Send the pull request with a relatively detailed description of the whats and whys
+- Thank you!
+
 Special thanks
+=======
 - Lucas Nasif ( http://lucasnasif.com/ ) for the idea and implementation of combining socket.io with craftyjs. This is his project that I've, at least for the time being, picked up and as you can see from above, have great ambitions for :D
