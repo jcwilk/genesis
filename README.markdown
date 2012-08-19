@@ -59,7 +59,7 @@ connection like mobile though.
 
 ### Testing ###
 - Install jasmine-node
-- ```jasmine-node spec```
+- ```jasmine-node --coffee spec```
 
 ### Pull request dogma ###
 - Make a branch and get it in sync with master of this repo (either rebase or cherry pick)
