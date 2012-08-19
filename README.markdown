@@ -57,10 +57,14 @@ connection like mobile though.
 - Limit information to line of sight
 
 
+### Testing ###
+- Install jasmine-node
+- ```jasmine-node spec```
+
 ### Pull request dogma ###
 - Make a branch and get it in sync with master of this repo (either rebase or cherry pick)
 - Include only the code you want to contribute on top of that
-- Please thoroughly test the code before sending it over as "correct", or alternatively, make a note about its limitations
+- Please thoroughly test the code before sending it over, either manually or, preferably, via automated test
 - Send the pull request with a relatively detailed description of the whats and whys
 - Thank you!
 

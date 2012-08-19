@@ -36,27 +36,7 @@ app.listen(port);
 console.log("...aaaand we're up! (port: %d env: %s)", app.address().port, app.settings.env);
 
 // Events
-var playerManager = function(){
-  ids = [];
-  idAutoInc = 0;
-  return {
-    create: function(){
-      ids.push(idAutoInc);
-      return idAutoInc++;
-    },
-    destroy: function(id){
-      index = ids.indexOf(id);
-      if(index >= 0){
-        ids.splice(index,1);
-        return true;
-      }
-      return false;
-    },
-    all: function(){
-      return ids.slice(0);
-    }
-  }
-}();
+var playerManager = require('./playerManager').playerManagerFactory();
 
 io.sockets.on('connection', function (socket) {
   var playerId = playerManager.create();
