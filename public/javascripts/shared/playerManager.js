@@ -13,6 +13,24 @@ var playerManagerFactory = function(){
     return findById(playerId) !== null
   };
 
+  var playerFactory = function(id){
+    var data = {};
+    var toData = function(){
+      return {
+        id: id,
+        data: data
+      }
+    };
+    return {
+      id: id,
+      toData: toData,
+      fromData: function(inData){
+        data = inData.data;
+        return toData();
+      }
+    };
+  }
+
   return {
     create: function(attributes){
       var newId;
@@ -22,7 +40,7 @@ var playerManagerFactory = function(){
       } else {
         while(exists(newId = idAutoInc++)){}
       }
-      var newPlayer = {id: newId};
+      var newPlayer = playerFactory(newId);
       for(var k in attributes) {
         if(k !== 'id' && attributes.hasOwnProperty(k)) newPlayer[k] = attributes[k]
       }
@@ -38,7 +56,9 @@ var playerManagerFactory = function(){
       return false;
     },
     all: function(){
-      return players.slice(0);
+      _all = [];
+      for(i=0; i<players.length; i++) _all.push(players[i].toData())
+      return _all;
     },
     findById: findById,
     exists: exists

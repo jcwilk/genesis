@@ -90,19 +90,22 @@ Crafty.c('LocalAvatar', {
     this.requires('Avatar')
       .attr({z: 99})
       .rightControls(2)
-      .bind("NewDirection", function(direction) {
-        var pos = this.pos();
-        Crafty.socket.emit('new_direction', {
-          dir: {
-            x: direction.x,
-            y: direction.y
-          },
-          pos: {
-            x: pos._x,
-            y: pos._y
-          }
-        })
+  },
+  onChangeDirection: function(callback) {  
+    this.bind('NewDirection', function(direction){
+      var pos = this.pos();
+      callback({
+        dir: {
+          x: direction.x,
+          y: direction.y
+        },
+        pos: {
+          x: pos._x,
+          y: pos._y
+        }
       })
+    });
+    return this;
   }
 });
 

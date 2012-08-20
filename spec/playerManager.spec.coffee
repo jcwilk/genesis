@@ -13,15 +13,20 @@ describe "playerManager", ->
         _subject_return = _subject()
       return _subject_return
 
+  newPlayer = undefined
+  pickNewPlayer = -> newPlayer = man.create()
+
+  numKeys = (h) ->
+    keys = []
+    keys.push(key) for key in h
+    keys.length
+
   man = undefined
   beforeEach ->
     _subject = _subject_return = _subject_ran = undefined
     man = playerManagerFactory()
 
   describe ".create", ->
-    newPlayer = undefined
-    pickNewPlayer = -> newPlayer = man.create()
-
     describe 'for the autoselected id', ->
       beforeEach ->
         subject -> pickNewPlayer().id
@@ -55,7 +60,7 @@ describe "playerManager", ->
           specifiedId = '20'
 
         it 'returns a player with the id as an integer', ->
-          expect(subject()).toEqual(id: 20)
+          expect(subject().id).toEqual(20)
 
       describe 'when the specified id exists', ->
         beforeEach ->
@@ -113,7 +118,16 @@ describe "playerManager", ->
         player = man.create()
 
       it "contains the player", ->
-        expect(subject()).toContain player
+        expect(subject()[0].id).toEqual(player.id)
+
+      describe 'when extra attributes are on the player', ->
+        beforeEach ->
+          player.extra = 'stuff'
+
+        it "only includes the data and id attributes", ->
+          expect(subject()[0].extra).toBeUndefined()
+          expect(subject()[0].id).toEqual(player.id)
+          expect(subject()[0].data).toEqual({})
 
   describe ".findById", ->
     playerId = undefined
@@ -162,3 +176,51 @@ describe "playerManager", ->
       it 'returns false', ->
         expect(subject()).toEqual(false)
 
+  describe "#toData", ->
+    beforeEach ->
+      pickNewPlayer()
+
+    it 'includes the id', ->
+      expect(newPlayer.toData().id).toEqual(newPlayer.id)
+
+    describe 'for the data attribute', ->
+      beforeEach ->
+        subject -> newPlayer.toData().data
+
+      describe 'when it has no set data', ->
+        it 'is empty', ->
+          expect(numKeys(subject())).toEqual(0)
+
+      describe 'when it has data set', ->
+        beforeEach ->
+          newPlayer.fromData({data: {a: 'b'}})
+
+        it 'returns the set data', ->
+          expect(subject().a).toEqual('b')
+
+  describe '#fromData', ->
+    beforeEach ->
+      pickNewPlayer()
+
+    describe 'by the returned data representation', ->
+      args = {data: {a: 'b'}}
+      beforeEach ->
+        subject -> newPlayer.fromData(args)
+
+      it 'stores the data attribute', ->
+        expect(subject().data.a).toEqual('b')
+
+      describe 'when passed extraneous arguments', ->
+        beforeEach ->
+          args.bogus = 'whatever'
+
+        it 'ignores them', ->
+          expect(subject().bogus).toBeUndefined()
+
+      describe 'with a new id passed', ->
+        beforeEach ->
+          args.id = 99
+
+        it 'does not change its id value', ->
+          oldId = newPlayer.id
+          expect(subject().id).toEqual(oldId)

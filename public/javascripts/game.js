@@ -18,15 +18,18 @@ Crafty.scene("main", function() {
 
   var currentPlayerEntity,
       currentPlayerId,
+      currentPlayer,
       players;
 
-  var updateRemotePlayer = function(data){
-    var remoteId = parseInt(data.id);
+  var updateRemotePlayer = function(playerData){
+    var remoteId = parseInt(playerData.id);
     if(remoteId == currentPlayerId) return null;
 
     var p=players.findById(remoteId);
     if(!p) p = players.create({id: remoteId})
-    if(!p.entity) p.entity = Crafty.e("RemoteAvatar").seedId(data.id);
+    if(!p.entity) p.entity = Crafty.e("RemoteAvatar").seedId(remoteId);
+
+    var data = p.fromData(playerData).data;
     if(data.pos) p.entity.attr(data.pos);
     if(data.dir){
       p.entity._movement.x = data.dir.x;
@@ -39,21 +42,26 @@ Crafty.scene("main", function() {
   Crafty.socket.on('set_player_id', function(data) {
     if(currentPlayerId === undefined){
       currentPlayerId = parseInt(data);
-      currentPlayerEntity = Crafty.e("LocalAvatar").seedId(currentPlayerId);
+      currentPlayerEntity = Crafty.e("LocalAvatar")
+                              .seedId(currentPlayerId)
 
       // After Joining the server sends data with all the current players and their positions so the client loads them into the map.
       // Don't set up listeners that depend on the knowledge of other players until this happens.
-      Crafty.socket.on("load_current_players", function(data) {
+      Crafty.socket.on("load_current_players", function(currentPlayers) {
         if(players === undefined){
           players = playerManagerFactory();
-          players.create({id: currentPlayerId, entity: currentPlayerEntity});
+          currentPlayer = players.create({id: currentPlayerId, entity: currentPlayerEntity});
 
-          for(var i = 0; i < data.length; i++) {
-            updateRemotePlayer(data[i]);
+          currentPlayerEntity.onChangeDirection(function(dirData){
+            Crafty.socket.emit('new_data', currentPlayer.fromData({data: dirData}))
+          })
+
+          for(var i = 0; i < currentPlayers.length; i++) {
+            updateRemotePlayer(currentPlayers[i]);
           }
 
-          Crafty.socket.on("player_quit", function(data) {
-            var p=players.findById(data.id);
+          Crafty.socket.on("player_quit", function(player) {
+            var p=players.findById(player.id);
             if(p) {
               p.entity.destroy();
               players.destroy(p.id);
@@ -61,8 +69,8 @@ Crafty.scene("main", function() {
           })
 
           //TODO: All the stuff inside the if statement probably should be moved into RemoteAvatar
-          Crafty.socket.on('player_update', function (data) {
-            updateRemotePlayer(data);
+          Crafty.socket.on('player_update', function (playerData) {
+            updateRemotePlayer(playerData);
           });
         }
       });

@@ -47,17 +47,15 @@ io.sockets.on('connection', function (socket) {
   var player = playerManager.create();
 
   socket.emit('set_player_id', player.id);
-  socket.emit('load_current_players', playerManager.all())
-  socket.broadcast.emit("player_update", player);
+  socket.emit('load_current_players', playerManager.all());
+  socket.broadcast.emit("player_update", player.toData());
 
-  socket.on('new_direction', function(data){
-    player.pos = data.pos;
-    player.dir = data.dir;
-    socket.broadcast.emit('player_update', player)
+  socket.on('new_data', function(playerData){
+    socket.broadcast.emit('player_update', player.fromData(playerData));
   })
 
   socket.on('disconnect', function () {
-    socket.broadcast.emit('player_quit', {id: player.id});
+    socket.broadcast.emit('player_quit', player.toData());
     playerManager.destroy(player);
   });
 });
