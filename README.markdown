@@ -58,8 +58,8 @@ connection like mobile though.
 
 
 ### Testing ###
-- Install jasmine-node
-- ```jasmine-node --coffee spec```
+- gem install guard-jasmine-node (requires ruby)
+- guard (from project root, will autotest and libnotify/growl)
 
 ### Pull request dogma ###
 - Make a branch and get it in sync with master of this repo (either rebase or cherry pick)
