@@ -33,16 +33,14 @@ connection like mobile though.
 
 
 ### Known bugs ###
-- Doesn't get past "Loading" on a Samsung Galaxy S2
-- If a window is left alone for a long time it eventually gets confused about which character is which, or at least about which sprite set they are
-- When joining existing players, the existing players appear stacked in the center to the new player until they move
+- Doesn't get past "Loading" on a Samsung Galaxy S2 or, unfortunately, currently on Chrome. May be a bug in the newer versions of Crafty (currently on the bleeding edge with 0.5.1). Please use an updated version of Firefox if you want the best experience.
+- No other known bugs! :D Let me know if you check it out and see soemthing wrong.
 
 
 ### Features coming soon ###
 - Collision detection
 - Server side room data
 - Chat
-- Server side tracking of player positions (rather than just rebroadcasting and discarding)
 - Scrolling map rather than static room
 - Server side heuristics to detect cheaters (specifically, forging your location)
 - Hazards/Death/Respawning
@@ -60,6 +58,7 @@ connection like mobile though.
 ### Testing ###
 - gem install guard-jasmine-node (requires ruby)
 - guard (from project root, will autotest and libnotify/growl)
+- Note that this is a little buggy/finicky. YMMV but having coffeescript specs with autotest and libnotify is freaking sweet. If you can't get it to work though, just use ```jasmine-node spec```, the binary is in node_modules
 
 ### Pull request dogma ###
 - Make a branch and get it in sync with master of this repo (either rebase or cherry pick)
