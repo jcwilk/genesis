@@ -36,8 +36,10 @@ Crafty.scene("main", function() {
 
           for(var i = 0; i < data.length; i++) {
             var newPlayer = data[i];
-            newPlayer.entity = Crafty.e("RemoteAvatar").seedId(newPlayer.id)
-            players.create(newPlayer);
+            if(parseInt(newPlayer.id) != currentPlayerId){
+              newPlayer.entity = Crafty.e("RemoteAvatar").seedId(newPlayer.id)
+              players.create(newPlayer);
+            }
           }
 
           Crafty.socket.on("player_quit", function(data) {
