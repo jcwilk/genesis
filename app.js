@@ -41,22 +41,22 @@ if(app.address() !== null) {
 }
 
 // Events
-var playerManager = require('./playerManager').playerManagerFactory();
+var playerManager = require('./lib/playerManager').playerManagerFactory();
 
 io.sockets.on('connection', function (socket) {
-  var playerId = playerManager.create();
+  var player = playerManager.create();
 
-  socket.emit('set_player_id', playerId);
-  socket.emit('load_current_players', {players: playerManager.all()})
-  socket.broadcast.emit("player_joined", playerId);
+  socket.emit('set_player_id', player.id);
+  socket.emit('load_current_players', playerManager.all())
+  socket.broadcast.emit("player_joined", player);
 
   socket.on('new_direction', function(data){
-    data.id = playerId;
+    data.id = player.id;
     socket.broadcast.emit('player_movement', data)
   })
 
   socket.on('disconnect', function () {
-    socket.broadcast.emit('player_quit', playerId);
-    playerManager.destroy(playerId);
+    socket.broadcast.emit('player_quit', {id: player.id});
+    playerManager.destroy(player);
   });
 });

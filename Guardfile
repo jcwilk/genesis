@@ -11,6 +11,7 @@ guard('jasmine-node',
 ) do
   watch(%r{^spec/.+\.spec\.coffee$})
   watch(%r{^lib/(.+)\.js$}) { |m| "spec/#{m[1]}.spec.coffee" }
+  watch(%r{^public/javascripts/shared/(.+)\.js$}) { |m| "spec/#{m[1]}.spec.coffee" }
 #  watch(%r{spec/spec_helper\.(js\.coffee|js|coffee)}) { "spec" }
 end
 

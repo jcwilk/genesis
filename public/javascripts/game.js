@@ -16,47 +16,56 @@ Crafty.scene("loading", function() {
 Crafty.scene("main", function() {
   generateMap();
 
-  var player, currentPlayerId, players;
+  var currentPlayerEntity,
+      currentPlayerId,
+      players;
+
 
   //Don't do anything else until we get the player_id
   Crafty.socket.on('set_player_id', function(data) {
     if(currentPlayerId === undefined){
-      currentPlayerId = data;
-    
-      player = Crafty.e("LocalAvatar").seedId(data);
+      currentPlayerId = parseInt(data);
+      currentPlayerEntity = Crafty.e("LocalAvatar").seedId(currentPlayerId);
 
       // After Joining the server sends data with all the current players and their positions so the client loads them into the map.
       // Don't set up listeners that depend on the knowledge of other players until this happens.
       Crafty.socket.on("load_current_players", function(data) {
         if(players === undefined){
-          players = {currentPlayerId: player}
+          players = playerManagerFactory();
+          players.create({id: currentPlayerId, entity: currentPlayerEntity});
 
-          for(var i = 0; i < data.players.length; i++) {
-            var id = data.players[i];
-            if(id != currentPlayerId) players[id] = Crafty.e("RemoteAvatar").seedId(id);
+          for(var i = 0; i < data.length; i++) {
+            var newPlayer = data[i];
+            newPlayer.entity = Crafty.e("RemoteAvatar").seedId(newPlayer.id)
+            players.create(newPlayer);
           }
 
           Crafty.socket.on("player_quit", function(data) {
-            if(p=players[data]) {
-              delete players[data];
-              p.destroy();
+            var p=players.findById(data.id);
+            if(p) {
+              p.entity.destroy();
+              players.destroy(p.id);
             }
           })
 
           //TODO: All the stuff inside the if statement probably should be moved into RemoteAvatar
           Crafty.socket.on('player_movement', function (data) {
-            console.log(data);
-            if((p=players[data.id]) && data.id != currentPlayerId){
-              p.attr(data.pos);
-              p._movement.x = data.x
-              p._movement.y = data.y
-              p.trigger('NewDirection',p._movement)
+            var p=players.findById(data.id)
+            if(p && parseInt(data.id) != currentPlayerId){
+              var entity = p.entity;
+              entity.attr(data.pos);
+              entity._movement.x = data.x;
+              entity._movement.y = data.y;
+              entity.trigger('NewDirection',entity._movement);
             }
           });
 
           // Add a new player to the map when a user joins the game.
           Crafty.socket.on("player_joined", function(data) {
-            if(data != currentPlayerId) players[data] = Crafty.e("RemoteAvatar").seedId(data);
+            if(parseInt(data.id) != currentPlayerId){
+              data.entity = Crafty.e("RemoteAvatar").seedId(data.id);
+              players.create(data);
+            }
           });
         }
       });
