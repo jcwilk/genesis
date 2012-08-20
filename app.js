@@ -48,11 +48,12 @@ io.sockets.on('connection', function (socket) {
 
   socket.emit('set_player_id', player.id);
   socket.emit('load_current_players', playerManager.all())
-  socket.broadcast.emit("player_joined", player);
+  socket.broadcast.emit("player_update", player);
 
   socket.on('new_direction', function(data){
-    data.id = player.id;
-    socket.broadcast.emit('player_movement', data)
+    player.pos = data.pos;
+    player.dir = data.dir;
+    socket.broadcast.emit('player_update', player)
   })
 
   socket.on('disconnect', function () {

@@ -20,6 +20,20 @@ Crafty.scene("main", function() {
       currentPlayerId,
       players;
 
+  var updateRemotePlayer = function(data){
+    var remoteId = parseInt(data.id);
+    if(remoteId == currentPlayerId) return null;
+
+    var p=players.findById(remoteId);
+    if(!p) p = players.create({id: remoteId})
+    if(!p.entity) p.entity = Crafty.e("RemoteAvatar").seedId(data.id);
+    if(data.pos) p.entity.attr(data.pos);
+    if(data.dir){
+      p.entity._movement.x = data.dir.x;
+      p.entity._movement.y = data.dir.y;
+    }
+    p.entity.trigger('NewDirection',p.entity._movement);
+  }
 
   //Don't do anything else until we get the player_id
   Crafty.socket.on('set_player_id', function(data) {
@@ -35,11 +49,7 @@ Crafty.scene("main", function() {
           players.create({id: currentPlayerId, entity: currentPlayerEntity});
 
           for(var i = 0; i < data.length; i++) {
-            var newPlayer = data[i];
-            if(parseInt(newPlayer.id) != currentPlayerId){
-              newPlayer.entity = Crafty.e("RemoteAvatar").seedId(newPlayer.id)
-              players.create(newPlayer);
-            }
+            updateRemotePlayer(data[i]);
           }
 
           Crafty.socket.on("player_quit", function(data) {
@@ -51,23 +61,8 @@ Crafty.scene("main", function() {
           })
 
           //TODO: All the stuff inside the if statement probably should be moved into RemoteAvatar
-          Crafty.socket.on('player_movement', function (data) {
-            var p=players.findById(data.id)
-            if(p && parseInt(data.id) != currentPlayerId){
-              var entity = p.entity;
-              entity.attr(data.pos);
-              entity._movement.x = data.x;
-              entity._movement.y = data.y;
-              entity.trigger('NewDirection',entity._movement);
-            }
-          });
-
-          // Add a new player to the map when a user joins the game.
-          Crafty.socket.on("player_joined", function(data) {
-            if(parseInt(data.id) != currentPlayerId){
-              data.entity = Crafty.e("RemoteAvatar").seedId(data.id);
-              players.create(data);
-            }
+          Crafty.socket.on('player_update', function (data) {
+            updateRemotePlayer(data);
           });
         }
       });

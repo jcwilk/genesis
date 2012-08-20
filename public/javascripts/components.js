@@ -93,8 +93,10 @@ Crafty.c('LocalAvatar', {
       .bind("NewDirection", function(direction) {
         var pos = this.pos();
         Crafty.socket.emit('new_direction', {
-          x: direction.x,
-          y: direction.y,
+          dir: {
+            x: direction.x,
+            y: direction.y
+          },
           pos: {
             x: pos._x,
             y: pos._y
