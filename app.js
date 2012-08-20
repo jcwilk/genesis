@@ -31,9 +31,14 @@ app.configure('production', function(){
 // Routes
 require('./routes/site')(app);
 
-var port = process.env.PORT || 3000;
+// Port allocation
+var port = process.env.PORT || 5000;
 app.listen(port);
-console.log("...aaaand we're up! (port: %d env: %s)", app.address().port, app.settings.env);
+if(app.address() !== null) {
+  console.log("...aaaand we're up! (port: %d env: %s)", app.address().port, app.settings.env);
+} else {
+  console.log("Unable to obtain an address!")
+}
 
 // Events
 var playerManager = require('./playerManager').playerManagerFactory();
