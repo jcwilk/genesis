@@ -15,17 +15,14 @@ var playerManagerFactory = function(){
 
   return {
     create: function(attributes){
-      var newPlayer = {id: idAutoInc};
+      var newId;
       if(attributes && attributes.id !== undefined){
-        var specifiedId = parseInt(attributes.id);
-        if(exists(specifiedId)) return false;
-        newPlayer.id = specifiedId;
+        newId = parseInt(attributes.id);
+        if(exists(newId)) return false;
       } else {
-        while(exists(newPlayer.id)) {
-          newPlayer.id = ++idAutoInc;
-        }
-        idAutoInc++;
+        while(exists(newId = idAutoInc++)){}
       }
+      var newPlayer = {id: newId};
       for(var k in attributes) {
         if(k !== 'id' && attributes.hasOwnProperty(k)) newPlayer[k] = attributes[k]
       }
