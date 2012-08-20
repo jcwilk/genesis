@@ -1,8 +1,7 @@
 playerManagerFactory = require("../playerManager").playerManagerFactory
+
 describe "playerManager", ->
-  _subject = undefined
-  _subject_return = undefined
-  _subject_ran = undefined
+  _subject = _subject_return = _subject_ran = undefined
 
   subject = (f) ->
     if f
@@ -34,9 +33,7 @@ describe "playerManager", ->
     player = undefined
     describe "for the list of players", ->
       beforeEach ->
-        subject ->
-          man.all()
-
+        subject -> man.all()
         player = man.create()
 
       it "does not include destroyed players", ->
@@ -45,8 +42,7 @@ describe "playerManager", ->
 
   describe ".all", ->
     beforeEach ->
-      subject ->
-        man.all()
+      subject -> man.all()
 
     describe "with no players", ->
       it "is empty", ->
