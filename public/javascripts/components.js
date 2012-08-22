@@ -23,12 +23,170 @@ Crafty.sprite(1,"images/players.png", {
   player7: [32*10,48*4, 32, 48]
 });
 
+Crafty.c("DataDriven", dataDrivenComponentFactory());
 
+var applyPositionDataToEntity = function(inData, e){
+  var data = inData.data,
+      changed = false;
+  if(data.hasOwnProperty('pos')){
+    changed = true;
+    var x = data.pos.x,
+        y = data.pos.y;
+    if(e.translateX) x = e.translateX(x);
+    if(e.translateY) y = e.translateY(y);
+    e.attr({x: x, y: y});
+  }
+  if(data.hasOwnProperty('dir')){
+    changed = true;
+    e._movement.x = data.dir.x;
+    e._movement.y = data.dir.y;
+  }
+  if(changed) e.trigger('NewDirection',e._movement);
+}
+
+Crafty.c("Chatty", {
+  init: function(){
+    var chatBox = Crafty.e('2D, DOM, Text, DataDriven, RightControls, SpriteAnimation')
+      .rightControls(0)
+      .css({
+        color: "black",
+        'font-size': "14px",
+        background: "white",
+        padding: "0px 2px",
+        'font-weight': "bold"
+      });
+    chatBox.translateX = function(inX){ return inX-10 };
+    chatBox.translateY = function(inY){ return inY+50 };
+    var newChatBoxPos = {
+      x: this.pos()._x,
+      y: this.pos()._y
+    };
+    
+    chatBox.delegate({fromData: function(inData){
+      var data = inData.data;
+      applyPositionDataToEntity(inData, chatBox);
+      if(data.hasOwnProperty('chat')) {
+        if(data.chat){
+          chatBox.css('border', '1px solid black');
+        } else {
+          chatBox.css('border', 'none');
+        }
+        chatBox.text(function(_){return data.chat});
+        if(this.onChangeTextCallback){
+          this.onChangeTextCallback(data.chat)
+        }
+      }
+    }});
+    this.chatBox = chatBox;
+    this.bind('Remove',function(){
+      this.chatBox.destroy();
+    })
+  },
+  onChangeText: function(callback) {
+    var chatBox = this.chatBox;
+    this.onChangeTextCallback = callback;
+
+
+    this.chatBox.bind('Change', function(){ //TODO: add a method for this
+      callback(chatBox.text());
+    })
+    return this;
+  },
+  bindChatKeys: function(){
+    this.bind('KeyDown', function(e){
+      var chatBox = this.chatBox,
+          newText = undefined,
+          key     = undefined;
+      //console.log(e.key);
+
+      //They're trying to muck with their browser so ignore it
+      if(this.isDown('CTRL') || this.isDown('ALT')) return;
+
+      if(e.key == 13){ //Enter
+        newText = '';
+      } else
+      if(e.key == 8){
+        if(chatBox.text().length > 0) newText = chatBox.text().slice(0,chatBox.text().length-1)
+      }
+      
+      var map;
+      if(this.isDown('SHIFT')){
+        if(e.key >= 65 && e.key <= 90) key = String.fromCharCode(e.key) //uppercase
+        map = {
+          32: '&nbsp;',
+          48: ')',
+          49: '!',
+          50: '@',
+          51: '#',
+          52: '$',
+          53: '%',
+          54: '^',
+          55: '&',
+          56: '*',
+          57: '(',
+          59: ':',
+          61: '+',
+          107: '+',
+          109: '_',
+          110: '.',
+          111: '/',
+          187: '+',
+          188: '<',
+          189: '-',
+          190: '>',
+          191: '?',
+          192: '~',
+          219: '{',
+          220: '|',
+          221: '}',
+          222: '"'
+        }
+      } else {
+        if(e.key >= 48 && e.key <= 57) key = String.fromCharCode(e.key) //numbers
+        if(e.key >= 65 && e.key <= 90) key = String.fromCharCode(e.key+32) //lowercase
+        map = {
+          32: '&nbsp;', //todo: HTML escape this crap
+          59: ';',
+          61: '=',
+          107: '+',
+          109: '-',
+          110: '.',
+          111: '/',
+          187: '+',
+          188: ',',
+          189: '-',
+          190: '.',
+          191: '/',
+          192: '`',
+          219: '[',
+          220: '\\',
+          221: ']',
+          222: "'"
+        }
+      }
+      for(var k in map){
+        if(map.hasOwnProperty(k) && e.key == k) key = map[k];
+      }
+      if(key !== undefined) newText = chatBox.text()+key;
+      if(newText !== undefined){
+        if(e.stopPropagation) e.stopPropagation();
+          else e.cancelBubble = true;
+
+        if(e.preventDefault) e.preventDefault();
+          else e.returnValue = false;
+        chatBox.fromData({data: {chat: newText}});
+      }
+    });
+    return this;
+  }
+})
 
 Crafty.c("Avatar", {
   init: function() {
-    this.requires("2D, Canvas, SpriteAnimation, RightControls")
+    this.requires("2D, Canvas, SpriteAnimation, RightControls, Chatty")
   },
+  startX: 400,
+  startY: 320,
   seedId: function(seedId) {
     var spriteId = seedId%8
     var spritePositions = [ [0,0], [32*3,0], [0,48*4], [32*3, 48*4], [32*6,0], [32*9,0], [32*6,48*4], [32*9, 48*4] ];
@@ -44,7 +202,7 @@ Crafty.c("Avatar", {
     };
 
     this.requires('player'+spriteId)
-      .attr({x: 400, y: 320, z:1}) // Make new players appear in the center of the map.
+      .attr({x: this.startX, y: this.startY, z:1}) // Make new players appear in the center of the map.
       .animate("walk_down",  movementAnimation.down)
       .animate("walk_left",  movementAnimation.left)
       .animate("walk_right", movementAnimation.right)
@@ -88,22 +246,29 @@ Crafty.c("RightControls", {
 Crafty.c('LocalAvatar', {
   init: function() {
     this.requires('Avatar')
+      .requires('Keyboard')
       .attr({z: 99})
       .rightControls(2)
+      .bindChatKeys();
+    this.chatBox.fromData({data: {pos: {x: this.startX, y: this.startY}}})
   },
   onChangeDirection: function(callback) {  
     this.bind('NewDirection', function(direction){
       var pos = this.pos();
-      callback({
-        dir: {
-          x: direction.x,
-          y: direction.y
-        },
-        pos: {
-          x: pos._x,
-          y: pos._y
+      var data = {
+        data: {
+          dir: {
+            x: direction.x,
+            y: direction.y
+          },
+          pos: {
+            x: pos._x,
+            y: pos._y
+          }
         }
-      })
+      }
+      this.chatBox.fromData(data);
+      callback(data.data);
     });
     return this;
   }
@@ -111,16 +276,12 @@ Crafty.c('LocalAvatar', {
 
 Crafty.c('RemoteAvatar', {
   init: function() {
-    this.requires('Avatar').rightControls(0)
+    this.requires('Avatar').rightControls(0);
   },
-  fromData: function(playerData){
-    var data = playerData.data;
-    if(data.pos) this.attr(data.pos);
-    if(data.dir){
-      this._movement.x = data.dir.x;
-      this._movement.y = data.dir.y;
-    }
-    this.trigger('NewDirection',this._movement);
+  fromData: function(inData){
+    applyPositionDataToEntity(inData, this);
+    this.chatBox.fromData(inData);
+      
     return this;
   }
 })

@@ -40,7 +40,7 @@ Crafty.scene("main", function() {
     if(currentPlayerId === undefined){
       currentPlayerId = parseInt(data);
       currentPlayerEntity = Crafty.e("LocalAvatar")
-                              .seedId(currentPlayerId)
+                              .seedId(currentPlayerId);
 
       // After Joining the server sends data with all the current players and their positions so the client loads them into the map.
       // Don't set up listeners that depend on the knowledge of other players until this happens.
@@ -49,9 +49,15 @@ Crafty.scene("main", function() {
           players = playerManagerFactory();
           currentPlayer = players.create({id: currentPlayerId, entity: currentPlayerEntity});
 
-          currentPlayerEntity.onChangeDirection(function(dirData){
-            Crafty.socket.emit('new_data', currentPlayer.fromData({data: dirData}))
-          })
+          currentPlayerEntity
+            .onChangeDirection(function(dirData){
+              Crafty.socket.emit('new_data', currentPlayer.fromData({data: dirData}));
+            })
+            .onChangeText(function(chat){
+              var newData = currentPlayer.toData();
+              newData.data.chat = chat;
+              Crafty.socket.emit('new_data', newData);
+            });
 
           for(var i = 0; i < currentPlayers.length; i++) {
             updateRemotePlayer(currentPlayers[i]);

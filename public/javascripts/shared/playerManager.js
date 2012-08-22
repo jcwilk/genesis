@@ -1,3 +1,32 @@
+//TODO: abstract this into the concept of a dataNode and away from
+// the concept of a player.
+var playerFactory = function(id){
+  var data = {};
+  var delegates = [];
+  var toData = function(){
+    return {
+      id: id, //TODO: do not include the id in toData()
+      data: data
+    }
+  };
+  return {
+    id: id,
+    toData: toData,
+    fromData: function(inData){
+      for(var k in inData.data){
+        if(inData.data.hasOwnProperty(k)) data[k] = inData.data[k]
+      }
+      for(var i = 0; i < delegates.length; i++){
+        delegates[i].fromData({data: data})
+      }
+      return toData();
+    },
+    delegate: function(newDelegate){
+      delegates.push(newDelegate);
+    }
+  };
+}
+
 var playerManagerFactory = function(){
   var players = [],
       idAutoInc = 0;
@@ -12,29 +41,6 @@ var playerManagerFactory = function(){
   var exists = function(playerId){
     return findById(playerId) !== null
   };
-
-  var playerFactory = function(id){
-    var data = {};
-    var delegate = undefined;
-    var toData = function(){
-      return {
-        id: id,
-        data: data
-      }
-    };
-    return {
-      id: id,
-      toData: toData,
-      fromData: function(inData){
-        data = inData.data; //TODO: Merge instead of overwrite?
-        if(delegate) delegate.fromData({data: data});
-        return toData();
-      },
-      delegate: function(newDelegate){
-        delegate = newDelegate;
-      }
-    };
-  }
 
   return {
     create: function(attributes){
@@ -70,6 +76,18 @@ var playerManagerFactory = function(){
   };
 };
 
+var dataDrivenComponentFactory = function(){
+  return {
+    init: function() {
+      this.dataNode = playerFactory();
+      this.fromData = this.dataNode.fromData;
+      this.toData   = this.dataNode.toData;
+      this.delegate = this.dataNode.delegate;
+    }
+  }
+}
+
 if(typeof exports != 'undefined'){
-  exports.playerManagerFactory = playerManagerFactory
+  exports.playerManagerFactory = playerManagerFactory;
+  exports.dataDrivenComponentFactory = dataDrivenComponentFactory;
 }

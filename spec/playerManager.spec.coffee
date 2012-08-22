@@ -1,4 +1,6 @@
-playerManagerFactory = require("../lib/playerManager").playerManagerFactory
+steamyGrabBag = require("../lib/playerManager")
+playerManagerFactory = steamyGrabBag.playerManagerFactory
+dataDrivenComponentFactory = steamyGrabBag.dataDrivenComponentFactory
 
 _subject = _subject_return = _subject_ran = undefined
 
@@ -230,14 +232,25 @@ describe "player", ->
           oldId = newPlayer.id
           expect(subject().id).toEqual(oldId)
 
+      describe 'after being called a second time with new data fields', ->
+        beforeEach ->
+          subject()
+          newPlayer.fromData({data: {c: 'd'}})
+
+        it 'merges the data with the old data', ->
+          expect(subject().data.a).toEqual('b')
+          expect(subject().data.c).toEqual('d')
+
   describe '.delegate()', ->
     describe 'when an object is assigned as a delegate', ->
       delegate = undefined
+      delegatedData = undefined
 
       beforeEach ->
+        delegatedData = undefined
         delegate = {
           fromData: (args) ->
-            subject -> args
+            delegatedData = args
         }
         newPlayer.delegate(delegate)
 
@@ -251,7 +264,77 @@ describe "player", ->
           newPlayer.fromData(obj)
 
         it 'passes the data into the delegate', ->
-          expect(subject().data).toEqual(data)
+          expect(delegatedData.data).toEqual(data)
 
         it 'still stores the data', ->
           expect(newPlayer.toData().data).toEqual(data)
+
+      describe 'and a second object is assigned as a delegate', ->
+        secondDelegate = undefined
+        secondDelegatedData = undefined
+
+        beforeEach ->
+          secondDelegate = {
+            fromData: (args) ->
+              secondDelegatedData = args
+          }
+          newPlayer.delegate(secondDelegate)
+
+        describe 'and fromData is called with an object', ->
+          obj = undefined
+          data = undefined
+
+          beforeEach ->
+            data = {some: 'data'}
+            obj = {data: data}
+            newPlayer.fromData(obj)
+
+          it 'passes the data into both delegates', ->
+            expect(delegatedData.data).toEqual(data)
+            expect(secondDelegatedData.data).toEqual(data)
+
+          it 'still stores the data', ->
+            expect(newPlayer.toData().data).toEqual(data)
+
+describe 'dataDrivenComponent', ->
+  beforeEach ->
+    clearSubject()
+
+  describe 'for a Crafty-style entity', ->
+    receivedData = undefined
+
+    beforeEach ->
+      receivedData = undefined
+      subject ->
+        entity = dataDrivenComponentFactory()
+        entity.init()
+        entity
+
+    describe 'when fromData is called with some data', ->
+      beforeEach ->
+        subject().fromData({data: {it: 'works'}})
+
+      it 'is stored in the component', ->
+        expect(subject().toData().data.it).toEqual('works')
+
+    describe 'when delegating to another dataNode', ->
+      dataNode = undefined
+
+      beforeEach ->
+        dataNode = playerManagerFactory().create()
+        subject().delegate(dataNode)
+        subject().fromData({data: {some: 'thing'}})
+
+      it 'sends the data to the node', ->
+        expect(dataNode.toData().data.some).toEqual('thing')
+
+    describe 'when delegated to by another dataNode', ->
+      dataNode = undefined
+
+      beforeEach ->
+        dataNode = playerManagerFactory().create()
+        dataNode.delegate(subject())
+        dataNode.fromData({data: {an: 'iota'}})
+
+      it 'receives data received by the dataNode', ->
+        expect(subject().toData().data.an).toEqual('iota')
