@@ -112,5 +112,15 @@ Crafty.c('LocalAvatar', {
 Crafty.c('RemoteAvatar', {
   init: function() {
     this.requires('Avatar').rightControls(0)
+  },
+  fromData: function(playerData){
+    var data = playerData.data;
+    if(data.pos) this.attr(data.pos);
+    if(data.dir){
+      this._movement.x = data.dir.x;
+      this._movement.y = data.dir.y;
+    }
+    this.trigger('NewDirection',this._movement);
+    return this;
   }
 })

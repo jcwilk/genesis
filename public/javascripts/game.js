@@ -27,15 +27,12 @@ Crafty.scene("main", function() {
 
     var p=players.findById(remoteId);
     if(!p) p = players.create({id: remoteId})
-    if(!p.entity) p.entity = Crafty.e("RemoteAvatar").seedId(remoteId);
-
-    var data = p.fromData(playerData).data;
-    if(data.pos) p.entity.attr(data.pos);
-    if(data.dir){
-      p.entity._movement.x = data.dir.x;
-      p.entity._movement.y = data.dir.y;
+    if(!p.entity) {
+      p.entity = Crafty.e("RemoteAvatar").seedId(remoteId);
+      p.delegate(p.entity);
     }
-    p.entity.trigger('NewDirection',p.entity._movement);
+
+    p.fromData(playerData);
   }
 
   //Don't do anything else until we get the player_id

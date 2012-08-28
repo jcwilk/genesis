@@ -15,6 +15,7 @@ var playerManagerFactory = function(){
 
   var playerFactory = function(id){
     var data = {};
+    var delegate = undefined;
     var toData = function(){
       return {
         id: id,
@@ -25,8 +26,12 @@ var playerManagerFactory = function(){
       id: id,
       toData: toData,
       fromData: function(inData){
-        data = inData.data;
+        data = inData.data; //TODO: Merge instead of overwrite?
+        if(delegate) delegate.fromData({data: data});
         return toData();
+      },
+      delegate: function(newDelegate){
+        delegate = newDelegate;
       }
     };
   }

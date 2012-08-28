@@ -1,32 +1,35 @@
 playerManagerFactory = require("../lib/playerManager").playerManagerFactory
 
+_subject = _subject_return = _subject_ran = undefined
+
+clearSubject = -> _subject = _subject_return = _subject_ran = undefined
+
+subject = (f) ->
+  if f
+    _subject = f
+  else
+    throw("no subject defined!") if !_subject
+    if !_subject_ran
+      _subject_ran = true
+      _subject_return = _subject()
+    return _subject_return
+
+
+numKeys = (h) ->
+  keys = []
+  keys.push(key) for key in h
+  keys.length
+
 describe "playerManager", ->
-  _subject = _subject_return = _subject_ran = undefined
-
-  subject = (f) ->
-    if f
-      _subject = f
-    else
-      throw("no subject defined!") if !_subject
-      if !_subject_ran
-        _subject_ran = true
-        _subject_return = _subject()
-      return _subject_return
-
   newPlayer = undefined
   pickNewPlayer = -> newPlayer = man.create()
 
-  numKeys = (h) ->
-    keys = []
-    keys.push(key) for key in h
-    keys.length
-
   man = undefined
   beforeEach ->
-    _subject = _subject_return = _subject_ran = undefined
+    clearSubject()
     man = playerManagerFactory()
 
-  describe ".create", ->
+  describe ".create()", ->
     describe 'for the autoselected id', ->
       beforeEach ->
         subject -> pickNewPlayer().id
@@ -93,7 +96,7 @@ describe "playerManager", ->
         it 'assigns the object', ->
           expect(subject().key).toEqual fun
 
-  describe ".destroy", ->
+  describe ".destroy()", ->
     player = undefined
     describe "for the list of players", ->
       beforeEach ->
@@ -104,7 +107,7 @@ describe "playerManager", ->
         man.destroy player
         expect(subject()).not.toContain player
 
-  describe ".all", ->
+  describe ".all()", ->
     beforeEach ->
       subject -> man.all()
 
@@ -129,7 +132,7 @@ describe "playerManager", ->
           expect(subject()[0].id).toEqual(player.id)
           expect(subject()[0].data).toEqual({})
 
-  describe ".findById", ->
+  describe ".findById()", ->
     playerId = undefined
     player = undefined
     beforeEach ->
@@ -157,7 +160,7 @@ describe "playerManager", ->
       it 'returns null', ->
         expect(subject()).toEqual null
 
-  describe ".exists", ->
+  describe ".exists()", ->
     playerId = undefined
     beforeEach ->
       subject -> man.exists playerId
@@ -176,10 +179,15 @@ describe "playerManager", ->
       it 'returns false', ->
         expect(subject()).toEqual(false)
 
-  describe "#toData", ->
-    beforeEach ->
-      pickNewPlayer()
+describe "player", ->
+  newPlayer = undefined
+  pickNewPlayer = -> newPlayer = playerManagerFactory().create()
 
+  beforeEach ->
+    clearSubject()
+    pickNewPlayer()
+
+  describe ".toData()", ->
     it 'includes the id', ->
       expect(newPlayer.toData().id).toEqual(newPlayer.id)
 
@@ -198,10 +206,7 @@ describe "playerManager", ->
         it 'returns the set data', ->
           expect(subject().a).toEqual('b')
 
-  describe '#fromData', ->
-    beforeEach ->
-      pickNewPlayer()
-
+  describe '.fromData()', ->
     describe 'by the returned data representation', ->
       args = {data: {a: 'b'}}
       beforeEach ->
@@ -224,3 +229,29 @@ describe "playerManager", ->
         it 'does not change its id value', ->
           oldId = newPlayer.id
           expect(subject().id).toEqual(oldId)
+
+  describe '.delegate()', ->
+    describe 'when an object is assigned as a delegate', ->
+      delegate = undefined
+
+      beforeEach ->
+        delegate = {
+          fromData: (args) ->
+            subject -> args
+        }
+        newPlayer.delegate(delegate)
+
+      describe 'and fromData is called with an object', ->
+        obj = undefined
+        data = undefined
+
+        beforeEach ->
+          data = {some: 'data'}
+          obj = {data: data}
+          newPlayer.fromData(obj)
+
+        it 'passes the data into the delegate', ->
+          expect(subject().data).toEqual(data)
+
+        it 'still stores the data', ->
+          expect(newPlayer.toData().data).toEqual(data)
