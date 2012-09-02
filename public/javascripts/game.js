@@ -50,17 +50,17 @@ Crafty.scene("main", function() {
           currentPlayer = players.create({id: currentPlayerId, entity: currentPlayerEntity});
 
           var throttledConnection = {
-            justSent: false,
+            justSent: 0,
             pendingData: null,
             sendData: function(){
-              if(!throttledConnection.justSent && throttledConnection.pendingData){
-                throttledConnection.justSent = true;
+              if(throttledConnection.justSent < 4 && throttledConnection.pendingData){
+                throttledConnection.justSent++;
                 Crafty.socket.emit('new_data', throttledConnection.pendingData);
                 throttledConnection.pendingData = null;
                 setTimeout(function(){
-                  throttledConnection.justSent = false;
+                  throttledConnection.justSent = 0;
                   throttledConnection.sendData();
-                }, 250)
+                }, 500)
               }
             },
             fromData: function(inData){
