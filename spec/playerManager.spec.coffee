@@ -190,8 +190,8 @@ describe "player", ->
     pickNewPlayer()
 
   describe ".toData()", ->
-    it 'includes the id', ->
-      expect(newPlayer.toData().id).toEqual(newPlayer.id)
+    it 'does not include the id', ->
+      expect(newPlayer.toData().id).toBeUndefined()
 
     describe 'for the data attribute', ->
       beforeEach ->
@@ -230,7 +230,8 @@ describe "player", ->
 
         it 'does not change its id value', ->
           oldId = newPlayer.id
-          expect(subject().id).toEqual(oldId)
+          subject()
+          expect(newPlayer.id).toEqual(oldId)
 
       describe 'after being called a second time with new data fields', ->
         beforeEach ->

@@ -23,26 +23,28 @@ Crafty.sprite(1,"images/players.png", {
   player7: [32*10,48*4, 32, 48]
 });
 
-Crafty.c("DataDriven", dataDrivenComponentFactory());
-
-var applyPositionDataToEntity = function(inData, e){
-  var data = inData.data,
-      changed = false;
-  if(data.hasOwnProperty('pos')){
-    changed = true;
-    var x = data.pos.x,
-        y = data.pos.y;
-    if(e.translateX) x = e.translateX(x);
-    if(e.translateY) y = e.translateY(y);
-    e.attr({x: x, y: y});
+(function(){
+  var newComponent = dataDrivenComponentFactory();
+  newComponent.applyPositionDataToEntity = function(inData){
+    var data = inData.data,
+        changed = false;
+    if(data.hasOwnProperty('pos')){
+      changed = true;
+      var x = data.pos.x,
+          y = data.pos.y;
+      if(this.translateX) x = this.translateX(x);
+      if(this.translateY) y = this.translateY(y);
+      this.attr({x: x, y: y});
+    }
+    if(data.hasOwnProperty('dir')){
+      changed = true;
+      this._movement.x = data.dir.x;
+      this._movement.y = data.dir.y;
+    }
+    if(changed) this.trigger('NewDirection',this._movement);
   }
-  if(data.hasOwnProperty('dir')){
-    changed = true;
-    e._movement.x = data.dir.x;
-    e._movement.y = data.dir.y;
-  }
-  if(changed) e.trigger('NewDirection',e._movement);
-}
+  Crafty.c("DataDriven", newComponent);
+})()
 
 Crafty.c("Chatty", {
   init: function(){
@@ -64,16 +66,13 @@ Crafty.c("Chatty", {
     
     chatBox.delegate({fromData: function(inData){
       var data = inData.data;
-      applyPositionDataToEntity(inData, chatBox);
+      chatBox.applyPositionDataToEntity(inData);
       if(data.hasOwnProperty('chat')) {
+        chatBox.text(function(_){return data.chat});
         if(data.chat){
           chatBox.css('border', '1px solid black');
         } else {
           chatBox.css('border', 'none');
-        }
-        chatBox.text(function(_){return data.chat});
-        if(this.onChangeTextCallback){
-          this.onChangeTextCallback(data.chat)
         }
       }
     }});
@@ -81,16 +80,6 @@ Crafty.c("Chatty", {
     this.bind('Remove',function(){
       this.chatBox.destroy();
     })
-  },
-  onChangeText: function(callback) {
-    var chatBox = this.chatBox;
-    this.onChangeTextCallback = callback;
-
-
-    this.chatBox.bind('Change', function(){ //TODO: add a method for this
-      callback(chatBox.text());
-    })
-    return this;
   },
   bindChatKeys: function(){
     this.bind('KeyDown', function(e){
@@ -183,7 +172,7 @@ Crafty.c("Chatty", {
 
 Crafty.c("Avatar", {
   init: function() {
-    this.requires("2D, Canvas, SpriteAnimation, RightControls, Chatty")
+    this.requires("2D, Canvas, SpriteAnimation, RightControls, Chatty, DataDriven")
   },
   startX: 400,
   startY: 320,
@@ -250,9 +239,18 @@ Crafty.c('LocalAvatar', {
       .attr({z: 99})
       .rightControls(2)
       .bindChatKeys();
+
+    this.chatBox.delegate(this);
     this.chatBox.fromData({data: {pos: {x: this.startX, y: this.startY}}})
-  },
-  onChangeDirection: function(callback) {  
+    //TODO: Make this less awkward. Currently we're feeding data into chatbox,
+    // letting it pipe the data back to us, then getting our data piped out to
+    // the playerManager dataNode to get synced to the server. In an ideal world,
+    // we would be feeding data into ourselves (ie, this.fromData rather than
+    // this.chatBox.fromData) and having it delegate to both chatBox and the
+    // playerManager dataNode, but chatBox needs to send data to us too and we
+    // don't (yet) have a safeguard against infinite loop delegating (ie, two
+    // dataNodes delegating to each other)
+
     this.bind('NewDirection', function(direction){
       var pos = this.pos();
       var data = {
@@ -268,20 +266,17 @@ Crafty.c('LocalAvatar', {
         }
       }
       this.chatBox.fromData(data);
-      callback(data.data);
     });
-    return this;
   }
 });
 
 Crafty.c('RemoteAvatar', {
   init: function() {
+    var e = this;
     this.requires('Avatar').rightControls(0);
-  },
-  fromData: function(inData){
-    applyPositionDataToEntity(inData, this);
-    this.chatBox.fromData(inData);
-      
-    return this;
+    this.delegate({fromData: function(inData){
+      e.applyPositionDataToEntity(inData);
+    }});
+    this.delegate(this.chatBox);
   }
 })

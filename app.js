@@ -45,17 +45,26 @@ var playerManager = require('./lib/playerManager').playerManagerFactory();
 
 io.sockets.on('connection', function (socket) {
   var player = playerManager.create();
+  var decoratedPlayerData = function(){
+    var newData = player.toData();
+    newData.id = player.id;
+    return newData;
+  }
+
+  var syncPlayerData = function(_){
+    socket.broadcast.emit("player_update", decoratedPlayerData());
+  }
 
   socket.emit('set_player_id', player.id);
   socket.emit('load_current_players', playerManager.all());
-  socket.broadcast.emit("player_update", player.toData());
-
+  syncPlayerData();
+  player.delegate({fromData: syncPlayerData})
   socket.on('new_data', function(playerData){
-    socket.broadcast.emit('player_update', player.fromData(playerData));
+    player.fromData(playerData);
   })
 
   socket.on('disconnect', function () {
-    socket.broadcast.emit('player_quit', player.toData());
+    socket.broadcast.emit('player_quit', decoratedPlayerData());
     playerManager.destroy(player);
   });
 });

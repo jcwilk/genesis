@@ -1,16 +1,12 @@
-//TODO: abstract this into the concept of a dataNode and away from
-// the concept of a player.
-var playerFactory = function(id){
+var dataNodeFactory = function(){
   var data = {};
   var delegates = [];
   var toData = function(){
     return {
-      id: id, //TODO: do not include the id in toData()
       data: data
     }
   };
   return {
-    id: id,
     toData: toData,
     fromData: function(inData){
       for(var k in inData.data){
@@ -51,7 +47,8 @@ var playerManagerFactory = function(){
       } else {
         while(exists(newId = idAutoInc++)){}
       }
-      var newPlayer = playerFactory(newId);
+      var newPlayer = dataNodeFactory();
+      newPlayer.id = newId;
       for(var k in attributes) {
         if(k !== 'id' && attributes.hasOwnProperty(k)) newPlayer[k] = attributes[k]
       }
@@ -68,7 +65,11 @@ var playerManagerFactory = function(){
     },
     all: function(){
       _all = [];
-      for(i=0; i<players.length; i++) _all.push(players[i].toData())
+      for(i=0; i<players.length; i++){
+        var newData = players[i].toData();
+        newData.id = players[i].id;
+        _all.push(newData);
+      }
       return _all;
     },
     findById: findById,
@@ -79,7 +80,7 @@ var playerManagerFactory = function(){
 var dataDrivenComponentFactory = function(){
   return {
     init: function() {
-      this.dataNode = playerFactory();
+      this.dataNode = dataNodeFactory();
       this.fromData = this.dataNode.fromData;
       this.toData   = this.dataNode.toData;
       this.delegate = this.dataNode.delegate;

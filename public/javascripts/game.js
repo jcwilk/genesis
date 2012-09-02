@@ -49,15 +49,10 @@ Crafty.scene("main", function() {
           players = playerManagerFactory();
           currentPlayer = players.create({id: currentPlayerId, entity: currentPlayerEntity});
 
-          currentPlayerEntity
-            .onChangeDirection(function(dirData){
-              Crafty.socket.emit('new_data', currentPlayer.fromData({data: dirData}));
-            })
-            .onChangeText(function(chat){
-              var newData = currentPlayer.toData();
-              newData.data.chat = chat;
-              Crafty.socket.emit('new_data', newData);
-            });
+          currentPlayer.delegate({fromData: function(inData){
+            Crafty.socket.emit('new_data', inData);
+          }})
+          currentPlayerEntity.delegate(currentPlayer);
 
           for(var i = 0; i < currentPlayers.length; i++) {
             updateRemotePlayer(currentPlayers[i]);
