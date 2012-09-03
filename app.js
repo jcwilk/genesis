@@ -4,6 +4,8 @@ var io = require('socket.io');
 var app = module.exports = express.createServer()
   , io = io.listen(app);
 
+app.use(express.static('./public', { maxAge: 604800 }))
+
 // Heroku doesn't support websockets
 io.configure(function() {
   io.set("transports", ["xhr-polling"]);
