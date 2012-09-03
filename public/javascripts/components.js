@@ -245,7 +245,7 @@ Crafty.c('LocalAvatar', {
       .bindChatKeys();
 
     this.delegate(this.chatBox);
-    this.chatBox.delegate(this);
+    this.chatBox.delegate(this, {only: ['chat']});
     this.fromData({data: {pos: {x: this.startX, y: this.startY}}})
 
     this.bind('NewDirection', function(direction){

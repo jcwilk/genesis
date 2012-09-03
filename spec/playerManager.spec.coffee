@@ -341,6 +341,31 @@ describe "player", ->
       it 'delegates the existing data to the new delegate', ->
         expect(delegatedData.data.contrived).toEqual('bs')
 
+    describe 'when an object is assinged as a limited delegate', ->
+      delegate = undefined
+      delegatedData = undefined
+
+      beforeEach ->
+        delegatedData = undefined
+        delegate = {
+          fromData: (args) ->
+            delegatedData = args
+        }
+        newPlayer.fromData({data: {
+          preexisting: 'filler',
+          special_field: 'initial'
+        }})
+        newPlayer.delegate(delegate, {only: ['special_field']})
+
+      it "only consumes initial data from the 'only' parameter", ->
+        expect(delegatedData.data.special_field).toEqual('initial')
+        expect(delegatedData.data.preexisting).toBeUndefined()
+
+      it "only accepts new data matching the 'only' parameter", ->
+        newPlayer.fromData({data: {a: 'b', special_field: 'c'}})
+        expect(delegatedData.data.special_field).toEqual('c')
+        expect(delegatedData.data.a).toBeUndefined()
+
 describe 'dataDrivenComponent', ->
   beforeEach ->
     clearSubject()

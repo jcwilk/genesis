@@ -66,6 +66,8 @@ var dataNodeFactory = function(){
   var delegates = [];
   var uuid = Math.uuidFast();
   var isParticipant = function(inData){
+    if(!inData.participants) return false;
+
     var array = inData.participants;
     var i = array.length;
     while (i--) {
@@ -74,6 +76,34 @@ var dataNodeFactory = function(){
       }
     }
     return false;
+  };
+  var sendToDelegate = function(del, outData){
+    if(isParticipant(outData)) return;
+
+    var participants = [uuid];
+    if(outData.participants){
+      for (var i = 0; i < outData.participants.length; i++){
+        participants.push(outData.participants[i]);
+      }
+    }
+
+    var filteredData = {};
+    var field;
+    if(del.only){
+      for(var i = 0; i < del.only.length; i++){
+        field = del.only[i];
+        if(outData.data[field] !== undefined){
+          filteredData[field] = outData.data[field];
+        }
+      }
+    } else {
+      filteredData = outData.data;
+    }
+
+    del.obj.fromData({
+      data: filteredData,
+      participants: participants
+    });
   }
   var toData = function(){
     return {
@@ -83,30 +113,24 @@ var dataNodeFactory = function(){
   return {
     toData: toData,
     fromData: function(inData){
-      var participants = [uuid];
-      if(inData.participants){
-        if(isParticipant(inData)) return null;
-        for (var i = 0; i < inData.participants.length; i++){
-          participants.push(inData.participants[i]);
-        }
-      }
+      if(isParticipant(inData)) return null;
 
       for(var k in inData.data){
         if(inData.data.hasOwnProperty(k)) data[k] = inData.data[k]
       }
       for(var i = 0; i < delegates.length; i++){
-        delegates[i].fromData({
-          data: inData.data,
-          participants: participants
-        })
+        sendToDelegate(delegates[i], inData)
       }
       return toData();
     },
-    delegate: function(newDelegate){
+    delegate: function(delegateObject, options){
+      newDelegate = {
+        obj: delegateObject
+      }
+      if(options && options.only) newDelegate.only = options.only
+
       delegates.push(newDelegate);
-      outData = toData();
-      outData.participants = [uuid];
-      newDelegate.fromData(outData);
+      sendToDelegate(newDelegate, toData());
     }
   };
 }
