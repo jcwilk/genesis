@@ -244,16 +244,9 @@ Crafty.c('LocalAvatar', {
       .rightControls(2)
       .bindChatKeys();
 
+    this.delegate(this.chatBox);
     this.chatBox.delegate(this);
-    this.chatBox.fromData({data: {pos: {x: this.startX, y: this.startY}}})
-    //TODO: Make this less awkward. Currently we're feeding data into chatbox,
-    // letting it pipe the data back to us, then getting our data piped out to
-    // the playerManager dataNode to get synced to the server. In an ideal world,
-    // we would be feeding data into ourselves (ie, this.fromData rather than
-    // this.chatBox.fromData) and having it delegate to both chatBox and the
-    // playerManager dataNode, but chatBox needs to send data to us too and we
-    // don't (yet) have a safeguard against infinite loop delegating (ie, two
-    // dataNodes delegating to each other)
+    this.fromData({data: {pos: {x: this.startX, y: this.startY}}})
 
     this.bind('NewDirection', function(direction){
       var pos = this.pos();
@@ -269,7 +262,7 @@ Crafty.c('LocalAvatar', {
           }
         }
       }
-      this.chatBox.fromData(data);
+      this.fromData(data);
     });
   }
 });

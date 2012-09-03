@@ -270,6 +270,16 @@ describe "player", ->
         it 'still stores the data', ->
           expect(newPlayer.toData().data).toEqual(data)
 
+        describe 'and fromData is called with another object', ->
+          beforeEach ->
+            data = {other: 'stuff'}
+            obj = {data: data}
+            newPlayer.fromData(obj)
+
+          it 'delegates only the new object data', ->
+            expect(delegatedData.data.some).toBeUndefined()
+            expect(delegatedData.data.other).toEqual('stuff')
+
       describe 'and a second object is assigned as a delegate', ->
         secondDelegate = undefined
         secondDelegatedData = undefined
@@ -297,15 +307,46 @@ describe "player", ->
           it 'still stores the data', ->
             expect(newPlayer.toData().data).toEqual(data)
 
+    describe 'when an object is assigned as a circular delegate', ->
+      cycleDelegate = undefined
+      beforeEach ->
+        cycleDelegate = playerManagerFactory().create()
+        newPlayer.delegate(cycleDelegate)
+        cycleDelegate.delegate(newPlayer)
+
+      describe 'when passing data into the player', ->
+        beforeEach ->
+          subject -> newPlayer.fromData({data: {any: 'thing'}})
+
+        it 'sends the data to the second, back to the first, and stops rather than looping infinitely', ->
+          spyOn(newPlayer, 'fromData').andCallThrough()
+          spyOn(cycleDelegate, 'fromData').andCallThrough()
+          subject()
+          expect(newPlayer.fromData.calls.length).toEqual(2)
+          expect(cycleDelegate.fromData.calls.length).toEqual(1)
+
+    describe 'when an object is assinged as a delegate after data has been set', ->
+      delegate = undefined
+      delegatedData = undefined
+
+      beforeEach ->
+        delegatedData = undefined
+        delegate = {
+          fromData: (args) ->
+            delegatedData = args
+        }
+        newPlayer.fromData({data: {contrived: 'bs'}})
+        newPlayer.delegate(delegate)
+
+      it 'delegates the existing data to the new delegate', ->
+        expect(delegatedData.data.contrived).toEqual('bs')
+
 describe 'dataDrivenComponent', ->
   beforeEach ->
     clearSubject()
 
   describe 'for a Crafty-style entity', ->
-    receivedData = undefined
-
     beforeEach ->
-      receivedData = undefined
       subject ->
         entity = dataDrivenComponentFactory()
         entity.init()
