@@ -34,7 +34,7 @@ connection like mobile though.
 
 ### Known bugs ###
 - Doesn't get past "Loading" on a Samsung Galaxy S2 or, unfortunately, currently on Chrome. May be a bug in the newer versions of Crafty (currently on the bleeding edge with 0.5.1). Please use an updated version of Firefox if you want the best experience.
-- No other known bugs! :D Let me know if you check it out and see soemthing wrong.
+- No other known bugs! :D Let me know if you check it out and see something wrong.
 
 
 ### Features coming soon ###

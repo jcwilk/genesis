@@ -2,7 +2,6 @@
 Crafty.scene("loading", function() {
   var text = Crafty.e("2D, DOM, Text").attr({w: 300, h: 320, x: 150, y: 120});
 
-  Crafty.background("#000");
   text.text("Loading").css({"text-align": "center", "color": "white", "font-size": "20px"});
 
   Crafty.load(["images/tiles.png", "images/players.png"], function() {
@@ -42,6 +41,10 @@ Crafty.scene("main", function() {
       currentPlayerEntity = Crafty.e("LocalAvatar")
                               .seedId(currentPlayerId);
 
+      Crafty.viewport.clampToEntities = false;
+      Crafty.viewport.centerOn(currentPlayerEntity,0);
+      Crafty.viewport.follow(currentPlayerEntity, 0, 0);
+
       // After Joining the server sends data with all the current players and their positions so the client loads them into the map.
       // Don't set up listeners that depend on the knowledge of other players until this happens.
       Crafty.socket.on("load_current_players", function(currentPlayers) {
@@ -49,10 +52,14 @@ Crafty.scene("main", function() {
           players = playerManagerFactory();
           currentPlayer = players.create({id: currentPlayerId, entity: currentPlayerEntity});
 
+          //Only send 4 updates per half second...
+          //but for the first 4 in a half second span, send them immediately
           var throttledConnection = {
             justSent: 0,
             pendingData: null,
-            sendData: function(){
+            sendData: function(inData){
+              if(inData !== undefined) throttledConnection.pendingData = inData;
+
               if(throttledConnection.justSent < 4 && throttledConnection.pendingData){
                 throttledConnection.justSent++;
                 Crafty.socket.emit('new_data', throttledConnection.pendingData);
@@ -64,8 +71,7 @@ Crafty.scene("main", function() {
               }
             },
             fromData: function(inData){
-              throttledConnection.pendingData = inData;
-              throttledConnection.sendData();
+              throttledConnection.sendData(inData);
             }
           }
 
