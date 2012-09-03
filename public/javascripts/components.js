@@ -59,10 +59,6 @@ Crafty.c("Chatty", {
       });
     chatBox.translateX = function(inX){ return inX-10 };
     chatBox.translateY = function(inY){ return inY+50 };
-    var newChatBoxPos = {
-      x: this.pos()._x,
-      y: this.pos()._y
-    };
     
     chatBox.delegate({fromData: function(inData){
       var data = inData.data;
@@ -172,7 +168,7 @@ Crafty.c("Chatty", {
 
 Crafty.c("Avatar", {
   init: function() {
-    this.requires("2D, Canvas, SpriteAnimation, RightControls, Chatty, DataDriven")
+    this.requires("2D, DOM, SpriteAnimation, RightControls, Chatty, DataDriven")
   },
   startX: 400,
   startY: 320,
@@ -192,6 +188,7 @@ Crafty.c("Avatar", {
 
     this.requires('player'+spriteId)
       .attr({x: this.startX, y: this.startY, z:1}) // Make new players appear in the center of the map.
+      .requires('Collision')
       .animate("walk_down",  movementAnimation.down)
       .animate("walk_left",  movementAnimation.left)
       .animate("walk_right", movementAnimation.right)
@@ -216,7 +213,14 @@ Crafty.c("Avatar", {
         if(!direction.x && !direction.y) {
           this.stop();
         }
-      });
+      })
+      .bind('Moved', function(from) {
+        if(this.hit('Solid')){
+          var newPos = {x: from.x, y:from.y}
+          this.attr(newPos);
+          this.chatBox.fromData({data: {pos: newPos}});
+        }
+      })
     return this;
   }
 })
