@@ -30,6 +30,10 @@ Crafty.scene("main", function() {
     p.fromData(playerData);
   }
 
+  var initializeCurrentPlayer = function(playerData){
+    currentPlayerEntity.applyPositionDataToEntity(playerData);
+  }
+
   Crafty.socket = io.connect(document.URL);
 
   // After Joining the server sends data with all the current players and their positions so the client loads them into the map.
@@ -41,7 +45,8 @@ Crafty.scene("main", function() {
       currentPlayerId = parseInt(gameState.currentPlayer.id);
       currentPlayerEntity = Crafty.e("LocalAvatar")
                           .seedId(currentPlayerId)
-                          .initializePosition(gameState.currentPlayer.pos);
+
+      initializeCurrentPlayer(gameState.currentPlayer);
 
       Crafty.viewport.clampToEntities = false;
       Crafty.viewport.centerOn(currentPlayerEntity,0);

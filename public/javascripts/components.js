@@ -43,6 +43,17 @@ Crafty.sprite(1,"images/players.png", {
     }
     if(changed) this.trigger('NewDirection',this._movement);
   }
+  newComponent.calculatePosData = function(inData){
+    var pos = this.pos();
+    return {
+      data: {
+        pos: {
+          x: pos._x,
+          y: pos._y
+        }
+      }
+    }
+  }
   Crafty.c("DataDriven", newComponent);
 })()
 
@@ -168,7 +179,9 @@ Crafty.c("Chatty", {
 
 Crafty.c("Avatar", {
   init: function() {
-    this.requires("2D, DOM, SpriteAnimation, RightControls, Chatty, DataDriven")
+    this.requires("2D, DOM, SpriteAnimation, RightControls, Chatty, DataDriven");    
+    this.delegate(this.chatBox);
+    
   },
   seedId: function(seedId) {
     var spriteId = seedId%8
@@ -184,9 +197,8 @@ Crafty.c("Avatar", {
       "up":    [ [pos[0], pos[1]+(48*3), 32, 48], [pos[0] + 32, pos[1]+(48*3), 32, 48], [pos[0] + (32*2), pos[1]+(48*3), 32, 48] ],
     };
 
-    this.requires('player'+spriteId)
+    this.requires('player'+spriteId+', Collision')
       .attr({z:1})
-      .requires('Collision')
       .animate("walk_down",  movementAnimation.down)
       .animate("walk_left",  movementAnimation.left)
       .animate("walk_right", movementAnimation.right)
@@ -214,11 +226,10 @@ Crafty.c("Avatar", {
       })
       .bind('Moved', function(from) {
         if(this.hit('Solid')){
-          var newPos = {x: from.x, y:from.y}
-          this.attr(newPos);
-          this.chatBox.fromData({data: {pos: newPos}});
+          this.applyPositionDataToEntity({data: {pos: {x: from.x, y:from.y}}});
         }
       })
+    
     return this;
   }
 })
@@ -242,43 +253,22 @@ Crafty.c('LocalAvatar', {
       .rightControls(2)
       .bindChatKeys();
 
-    this.delegate(this.chatBox);
     this.chatBox.delegate(this, {only: ['chat']});
 
     this.bind('NewDirection', function(direction){
-      var pos = this.pos();
-      var data = {
-        data: {
-          dir: {
-            x: direction.x,
-            y: direction.y
-          },
-          pos: {
-            x: pos._x,
-            y: pos._y
-          }
-        }
-      }
-      this.fromData(data);
+      var outData = this.calculatePosData();
+      outData.data.dir = {x: direction.x, y: direction.y};
+      this.fromData(outData);
     });
-  },
-  initializePosition: function(pos){
-    var x = pos.x,
-        y = pos.y,
-        newPos = {x: x, y: y};
-    this.attr(newPos);
-    this.fromData({data: {pos: newPos}});
-    return this;
   }
 });
 
 Crafty.c('RemoteAvatar', {
   init: function() {
-    var e = this;
     this.requires('Avatar').rightControls(0);
+    var that = this;
     this.delegate({fromData: function(inData){
-      e.applyPositionDataToEntity(inData);
+      that.applyPositionDataToEntity(inData);
     }});
-    this.delegate(this.chatBox);
   }
 })

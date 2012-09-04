@@ -100,7 +100,7 @@ io.sockets.on('connection', function (socket) {
     room: {tiles: roomTiles},
     currentPlayer: {
       id: player.id,
-      pos: {x: 200, y: 160}
+      data: {pos: {x: 200, y: 160}}
     }
   });
   player.delegate({fromData: syncPlayerData});

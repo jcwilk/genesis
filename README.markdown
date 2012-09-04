@@ -32,25 +32,32 @@ connection like mobile though.
 - Heroku currently (AFAIK) limits you to 1000 connections. If that becomes a limiting factor though, I would consider that a non-problem problem, as Adam Carolla would say.
 
 
-### Known bugs ###
-- Doesn't get past "Loading" on a Samsung Galaxy S2 or, unfortunately, currently on Chrome. May be a bug in the newer versions of Crafty (currently on the bleeding edge with 0.5.1). Please use an updated version of Firefox if you want the best experience.
-- No other known bugs! :D Let me know if you check it out and see something wrong.
-
-
-### Features coming soon ###
-- Collision detection
-- Server side room data
+### Current features ###
+- Instant player allocation on page load
 - Chat
-- Scrolling map rather than static room
+- Scrolling view following the player
+- dataNode infrastructure for piping data between heterogeneous entities/systems
+- Collision detection with walls
+- Server side room data (currently only retrieved on page load)
+
+
+### Known bugs ###
+- Currently makes the viewport too large for mobile (fix is known, just need to get to it)
+- Chat is currently a bit awkward mainly due to it being parsed as HTML (d'oh)
+- User gets too much trust, they can currently arbitrarily set their position
+
+
+### Features planned ###
+- Better mobile support (text box for chat, onscreen arrows for movement)
 - Server side heuristics to detect cheaters (specifically, forging your location)
-- Hazards/Death/Respawning
+- Hazards/Death/Respawning?
 
 
-### Planned delegation to a rails server ###
+### Hypothetical delegation to a rails server ###
+- Admin interface for editing rooms and room data serving
 - Player persistence
 - Movement validation (anti cheat)
 - Entity tracking (mobs, items, etc)
-- Admin interface for editing rooms
 - Player cookie-based authentication
 - Limit information to line of sight
 
