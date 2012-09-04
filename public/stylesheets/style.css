@@ -1,12 +1,13 @@
 body {
   padding: 10px;
   font: 14px "Lucida Grande", Helvetica, Arial, sans-serif;
-  background: white url("/images/star-space-tile.jpg"); /* Thanks StarFields! http://1-background.com/stars_1.htm */
-  background-repeat: repeat;
+  background-color: black;
 }
 
 #cr-stage {
   margin: 0 auto 0 auto;
+  background: white url("/images/star-space-tile.jpg"); /* Thanks StarFields! http://1-background.com/stars_1.htm */
+  background-repeat: repeat;
 }
 
 a {
