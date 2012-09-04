@@ -5,16 +5,12 @@ Crafty.scene("loading", function() {
   text.text("Loading").css({"text-align": "center", "color": "white", "font-size": "20px"});
 
   Crafty.load(["/images/tiles.png", "/images/players.png"], function() {
-    Crafty.socket = io.connect(document.URL);
-
     Crafty.scene("main"); // When everything is loaded, run the main scene
   });
 });
 
 // MAIN SCENE
 Crafty.scene("main", function() {
-  generateMap();
-
   var currentPlayerEntity,
       currentPlayerId,
       currentPlayer,
@@ -34,67 +30,70 @@ Crafty.scene("main", function() {
     p.fromData(playerData);
   }
 
-  //Don't do anything else until we get the player_id
-  Crafty.socket.on('set_player_id', function(data) {
+  Crafty.socket = io.connect(document.URL);
+
+  // After Joining the server sends data with all the current players and their positions so the client loads them into the map.
+  // Don't set up listeners that depend on the knowledge of other players until this happens.
+  Crafty.socket.on("load_current_state", function(gameState) {
     if(currentPlayerId === undefined){
-      currentPlayerId = parseInt(data);
+      generateMap(gameState.room);
+
+      currentPlayerId = parseInt(gameState.currentPlayer.id);
       currentPlayerEntity = Crafty.e("LocalAvatar")
-                              .seedId(currentPlayerId);
+                          .seedId(currentPlayerId)
+                          .initializePosition(gameState.currentPlayer.pos);
 
       Crafty.viewport.clampToEntities = false;
       Crafty.viewport.centerOn(currentPlayerEntity,0);
       Crafty.viewport.follow(currentPlayerEntity, 0, 0);
 
-      // After Joining the server sends data with all the current players and their positions so the client loads them into the map.
-      // Don't set up listeners that depend on the knowledge of other players until this happens.
-      Crafty.socket.on("load_current_players", function(currentPlayers) {
-        if(players === undefined){
-          players = playerManagerFactory();
-          currentPlayer = players.create({id: currentPlayerId, entity: currentPlayerEntity});
+      players = playerManagerFactory();
+      currentPlayer = players.create({id: currentPlayerId, entity: currentPlayerEntity});
 
-          //Only send 4 updates per half second...
-          //but for the first 4 in a half second span, send them immediately
-          var throttledConnection = {
-            justSent: 0,
-            pendingData: null,
-            sendData: function(inData){
-              if(inData !== undefined) throttledConnection.pendingData = inData;
+      //Only send 4 updates per half second...
+      //but for the first 4 in a half second span, send them immediately
+      //TODO: This overwrites and discards excessive updates, instead it should
+      //      merge them together and intersect the participants. Currently there's
+      //      the danger of chat data flooding out position data and leaving the
+      //      position stale.
+      var throttledConnection = {
+        justSent: 0,
+        pendingData: null,
+        sendData: function(inData){
+          if(inData !== undefined) throttledConnection.pendingData = inData;
 
-              if(throttledConnection.justSent < 4 && throttledConnection.pendingData){
-                throttledConnection.justSent++;
-                Crafty.socket.emit('new_data', throttledConnection.pendingData);
-                throttledConnection.pendingData = null;
-                setTimeout(function(){
-                  throttledConnection.justSent = 0;
-                  throttledConnection.sendData();
-                }, 500)
-              }
-            },
-            fromData: function(inData){
-              throttledConnection.sendData(inData);
-            }
+          if(throttledConnection.justSent < 4 && throttledConnection.pendingData){
+            throttledConnection.justSent++;
+            Crafty.socket.emit('new_data', throttledConnection.pendingData);
+            throttledConnection.pendingData = null;
+            setTimeout(function(){
+              throttledConnection.justSent = 0;
+              throttledConnection.sendData();
+            }, 500)
           }
-
-          currentPlayer.delegate(throttledConnection);
-          currentPlayerEntity.delegate(currentPlayer);
-
-          for(var i = 0; i < currentPlayers.length; i++) {
-            updateRemotePlayer(currentPlayers[i]);
-          }
-
-          Crafty.socket.on("player_quit", function(player) {
-            var p=players.findById(player.id);
-            if(p) {
-              p.entity.destroy();
-              players.destroy(p.id);
-            }
-          })
-
-          //TODO: All the stuff inside the if statement probably should be moved into RemoteAvatar
-          Crafty.socket.on('player_update', function (playerData) {
-            updateRemotePlayer(playerData);
-          });
+        },
+        fromData: function(inData){
+          throttledConnection.sendData(inData);
         }
+      }
+
+      currentPlayer.delegate(throttledConnection);
+      currentPlayerEntity.delegate(currentPlayer);
+
+      for(var i = 0; i < gameState.players.length; i++) {
+        updateRemotePlayer(gameState.players[i]);
+      }
+
+      Crafty.socket.on("player_quit", function(player) {
+        var p=players.findById(player.id);
+        if(p) {
+          p.entity.destroy();
+          players.destroy(p.id);
+        }
+      })
+
+      Crafty.socket.on('player_update', function (playerData) {
+        updateRemotePlayer(playerData);
       });
     }
   });

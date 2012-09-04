@@ -45,19 +45,64 @@ if(app.address() !== null) {
 // Events
 var playerManager = require('./lib/playerManager').playerManagerFactory();
 
+var generateMap = function() {
+  var tiles = []
+  for (var i = 1; i < 12; i++)
+    for (var j = 1; j < 10; j++) {
+      tiles.push({
+        components: ['grass'+Math.floor(Math.random()*4+1)],
+        tilePos:    {x:i,y:j}
+      });
+    }
+
+  // Wall tops and bottoms along the x-axis
+  for (var i = 0; i < 13; i++) {
+    tiles.push({
+      components: ['Solid','wall_top','dirt'],
+      tilePos:    {x:i,y:0}
+    });
+    tiles.push({
+      components: ['Solid','wall_bottom','dirt'],
+      tilePos:    {x:i,y:10}
+    });
+  }
+
+  // Wall lefts and rights along the y axis
+  for (var i = 1; i < 10; i++) {
+    tiles.push({
+      components: ['Solid','wall_left','dirt'],
+      tilePos:    {x:0,y:i}
+    });
+    tiles.push({
+      components: ['Solid','wall_right','dirt'],
+      tilePos:    {x:12,y:i}
+    });
+  }
+
+  return tiles;
+};
+
+var roomTiles = generateMap();
+
 io.sockets.on('connection', function (socket) {
-  var player = playerManager.create();
   var decoratePlayerData = function(newData){
     newData.id = player.id;
     return newData;
   }
-
   var syncPlayerData = function(newData){
     socket.broadcast.emit("player_update", decoratePlayerData(newData));
   }
 
-  socket.emit('set_player_id', player.id);
-  socket.emit('load_current_players', playerManager.all());
+  var player = playerManager.create();
+
+  socket.emit('load_current_state', {
+    players: playerManager.all(),
+    room: {tiles: roomTiles},
+    currentPlayer: {
+      id: player.id,
+      pos: {x: 200, y: 160}
+    }
+  });
   player.delegate({fromData: syncPlayerData});
   socket.on('new_data', function(playerData){
     player.fromData(playerData);

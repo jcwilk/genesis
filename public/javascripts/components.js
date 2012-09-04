@@ -170,8 +170,6 @@ Crafty.c("Avatar", {
   init: function() {
     this.requires("2D, DOM, SpriteAnimation, RightControls, Chatty, DataDriven")
   },
-  startX: 400,
-  startY: 320,
   seedId: function(seedId) {
     var spriteId = seedId%8
     var spritePositions = [ [0,0], [32*3,0], [0,48*4], [32*3, 48*4], [32*6,0], [32*9,0], [32*6,48*4], [32*9, 48*4] ];
@@ -187,7 +185,7 @@ Crafty.c("Avatar", {
     };
 
     this.requires('player'+spriteId)
-      .attr({x: this.startX, y: this.startY, z:1}) // Make new players appear in the center of the map.
+      .attr({z:1})
       .requires('Collision')
       .animate("walk_down",  movementAnimation.down)
       .animate("walk_left",  movementAnimation.left)
@@ -246,7 +244,6 @@ Crafty.c('LocalAvatar', {
 
     this.delegate(this.chatBox);
     this.chatBox.delegate(this, {only: ['chat']});
-    this.fromData({data: {pos: {x: this.startX, y: this.startY}}})
 
     this.bind('NewDirection', function(direction){
       var pos = this.pos();
@@ -264,6 +261,14 @@ Crafty.c('LocalAvatar', {
       }
       this.fromData(data);
     });
+  },
+  initializePosition: function(pos){
+    var x = pos.x,
+        y = pos.y,
+        newPos = {x: x, y: y};
+    this.attr(newPos);
+    this.fromData({data: {pos: newPos}});
+    return this;
   }
 });
 
