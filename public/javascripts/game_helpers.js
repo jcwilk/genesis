@@ -8,6 +8,7 @@ var generateMap = function(roomData) {
     for(var j = 0; j < tile.components.length; j++){
       componentString+= (', '+tile.components[j]);
     }
+    componentString+= ', Collision';
     Crafty.e(componentString).attr({x: tile.tilePos.x*32, y: tile.tilePos.y*32})
   }
 };

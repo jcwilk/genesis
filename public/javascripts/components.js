@@ -224,6 +224,7 @@ Crafty.c("Avatar", {
           this.stop();
         }
       })
+      .collision([this.w/2-16,this.h-32],[this.w/2+16,this.h-32],[this.w/2+16,this.h],[this.w/2-16,this.h])
       .bind('Moved', function(from) {
         if(this.hit('Solid')){
           this.applyPositionDataToEntity({data: {pos: {x: from.x, y:from.y}}});
