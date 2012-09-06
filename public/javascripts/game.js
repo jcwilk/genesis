@@ -4,7 +4,7 @@ Crafty.scene("loading", function() {
 
   text.text("Loading").css({"text-align": "center", "color": "white", "font-size": "20px"});
 
-  Crafty.load(["/images/tiles.png", "/images/players.png"], function() {
+  Crafty.load(["/images/players.png"], function() {
     Crafty.scene("main"); // When everything is loaded, run the main scene
   });
 });

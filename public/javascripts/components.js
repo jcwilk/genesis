@@ -1,12 +1,3 @@
-// Turn the sprite map into usable components
-Crafty.sprite(32, "images/tiles.png", {
-  grass1: [0,0],
-  grass2: [1,0],
-  grass3: [2,0],
-  grass4: [3,0],
-  dirt:   [8,0],
-});
-
 //Each sprite is 32x48
 //Total image size is 384x384
 //Represents 8 players, 4 across 2 high
