@@ -18,7 +18,7 @@ locally) then just do `foreman start` and open localhost:5000 (or whatever port 
 
 Also, this now works on heroku. Just run something like the following commands to get it up and running: (will make a raketask for this soon)
 
-  heroku create --stack cedar
+  heroku create username-genesis --stack cedar
   git push heroku master
   heroku config:set DEFAULT_ROOM='http://yourroomserver.com/rooms/1234' #see [genesis-rooms](http://www.github.com/jcwilk/genesis-rooms)
   heroku ps:scale web=1
