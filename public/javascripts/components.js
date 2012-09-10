@@ -58,7 +58,8 @@ Crafty.c("Chatty", {
         background: "white",
         padding: "0px 2px",
         'font-weight': "bold"
-      });
+      })
+      .attr({z:90});
     chatBox.translateX = function(inX){ return inX-10 };
     chatBox.translateY = function(inY){ return inY+50 };
     
@@ -241,7 +242,7 @@ Crafty.c('LocalAvatar', {
   init: function() {
     this.requires('Avatar')
       .requires('Keyboard')
-      .attr({z: 99})
+      .attr({z: 50})
       .rightControls(2)
       .bindChatKeys();
 
@@ -257,7 +258,9 @@ Crafty.c('LocalAvatar', {
 
 Crafty.c('RemoteAvatar', {
   init: function() {
-    this.requires('Avatar').rightControls(0);
+    this.requires('Avatar')
+      .attr({z: 40}) //TODO: It seems to ignore this setting and still places in front of LocalAvatar
+      .rightControls(0);
     var that = this;
     this.delegate({fromData: function(inData){
       that.applyPositionDataToEntity(inData);
