@@ -45,44 +45,9 @@ if(app.address() !== null) {
 // Events
 var playerManager = require('./lib/playerManager').playerManagerFactory();
 
-var roomData;
-
-var setupSockets = function(){
-  io.sockets.on('connection', function(socket){
-    var decoratePlayerData = function(newData){
-      newData.id = player.id;
-      return newData;
-    }
-    var syncPlayerData = function(newData){
-      socket.broadcast.emit("player_update", decoratePlayerData(newData));
-    }
-
-    var player = playerManager.create();
-    player.fromData({data: {pos: roomData.room.spawn}});
-    player.delegate({fromData: syncPlayerData});
-
-    socket.emit('load_current_state', {
-      players: playerManager.all(),
-      room: roomData.room,
-      currentPlayer: {
-        id: player.id
-      }
-    });
-    
-    socket.on('new_data', function(playerData){
-      player.fromData(playerData);
-    })
-
-    socket.on('disconnect', function () {
-      socket.broadcast.emit('player_quit', decoratePlayerData(player.toData()));
-      playerManager.destroy(player);
-    });
-  });
-};
-
 var url = require('url');
 
-(function(){
+var fetchRoom = function(callback){
   var defaultRoom = url.parse(process.env.DEFAULT_ROOM || 'http://localhost:3000/rooms/1234.json')
 
   var options = {
@@ -100,10 +65,41 @@ var url = require('url');
       rawData += chunk;
     });
     res.on('end', function() {
-      roomData = JSON.parse(rawData);
-      setupSockets();
+      callback(JSON.parse(rawData));
     });
   }).end();
-})();
+};
 
 
+io.sockets.on('connection', function(socket){
+  var decoratePlayerData = function(newData){
+    newData.id = player.id;
+    return newData;
+  }
+
+  var player = playerManager.create();
+
+  socket.on('disconnect', function () {
+    socket.broadcast.emit('player_quit', decoratePlayerData(player.toData()));
+    playerManager.destroy(player);
+  });
+
+  fetchRoom(function(roomData){
+    player.fromData({data: {pos: roomData.room.spawn}});
+    player.delegate({fromData: function(newData){
+      socket.broadcast.emit("player_update", decoratePlayerData(newData));
+    }});
+
+    socket.emit('load_current_state', {
+      players: playerManager.all(),
+      room: roomData.room,
+      currentPlayer: {
+        id: player.id
+      }
+    });
+    
+    socket.on('new_data', function(playerData){
+      player.fromData(playerData);
+    });
+  });  
+});
