@@ -94,9 +94,12 @@ var url = require('url');
   require('http').request(options, function(res) {
     console.log('STATUS: ' + res.statusCode);
     res.setEncoding('utf8');
+    var rawData = '';
     res.on('data', function (chunk) {
-      roomData = JSON.parse(chunk);
-      //console.log(roomData);
+      rawData += chunk;
+    });
+    res.on('end', function() {
+      roomData = JSON.parse(rawData);
       setupSockets();
     });
   }).end();
