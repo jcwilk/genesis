@@ -39,7 +39,8 @@ connection like mobile though.
 - Scrolling view following the player
 - dataNode infrastructure for piping data between heterogeneous entities/systems
 - Collision detection with walls
-- Server side room data (currently only retrieved on page load)
+- Room data stored/generated from a [secondary server](http://www.github.com/jcwilk/genesis-rooms)
+- Room data retrieved on player connect and forwarded to the client by the genesis server
 
 
 ### Known bugs ###
@@ -54,8 +55,7 @@ connection like mobile though.
 - Hazards/Death/Respawning?
 
 
-### Hypothetical delegation to a rails server ###
-- Admin interface for editing rooms and room data serving
+### Hypothetical further delegation to an external node or rails server ###
 - Player persistence
 - Movement validation (anti cheat)
 - Entity tracking (mobs, items, etc)
