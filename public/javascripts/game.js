@@ -16,9 +16,8 @@ Crafty.scene("main", function() {
       currentPlayer,
       players;
 
-  var updateRemotePlayer = function(playerData){
+  var updatePlayer = function(playerData){
     var remoteId = parseInt(playerData.id);
-    if(remoteId == currentPlayerId) return null;
 
     var p=players.findById(remoteId);
     if(!p) p = players.create({id: remoteId})
@@ -45,8 +44,6 @@ Crafty.scene("main", function() {
       currentPlayerId = parseInt(gameState.currentPlayer.id);
       currentPlayerEntity = Crafty.e("LocalAvatar")
                           .seedId(currentPlayerId)
-
-      initializeCurrentPlayer(gameState.currentPlayer);
 
       Crafty.viewport.clampToEntities = false;
       Crafty.viewport.centerOn(currentPlayerEntity,0);
@@ -83,10 +80,11 @@ Crafty.scene("main", function() {
       }
 
       currentPlayer.delegate(throttledConnection);
+      currentPlayer.delegate(currentPlayerEntity);
       currentPlayerEntity.delegate(currentPlayer);
 
       for(var i = 0; i < gameState.players.length; i++) {
-        updateRemotePlayer(gameState.players[i]);
+        updatePlayer(gameState.players[i]);
       }
 
       Crafty.socket.on("player_quit", function(player) {
@@ -98,7 +96,7 @@ Crafty.scene("main", function() {
       })
 
       Crafty.socket.on('player_update', function (playerData) {
-        updateRemotePlayer(playerData);
+        updatePlayer(playerData);
       });
     }
   });

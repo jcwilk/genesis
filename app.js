@@ -58,16 +58,17 @@ var setupSockets = function(){
     }
 
     var player = playerManager.create();
+    player.fromData({data: {pos: roomData.room.spawn}});
+    player.delegate({fromData: syncPlayerData});
 
     socket.emit('load_current_state', {
       players: playerManager.all(),
       room: roomData.room,
       currentPlayer: {
-        id: player.id,
-        data: {pos: {x: 200, y: 160}}
+        id: player.id
       }
     });
-    player.delegate({fromData: syncPlayerData});
+    
     socket.on('new_data', function(playerData){
       player.fromData(playerData);
     })

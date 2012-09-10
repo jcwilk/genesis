@@ -32,7 +32,11 @@ Crafty.sprite(1,"images/players.png", {
       this._movement.x = data.dir.x;
       this._movement.y = data.dir.y;
     }
-    if(changed) this.trigger('NewDirection',this._movement);
+    if(this._remoteControlled) this.trigger('NewDirection',this._movement);
+  }
+  newComponent.remoteControlled = function(setToValue){
+    this._remoteControlled = setToValue;
+    return this;
   }
   newComponent.calculatePosData = function(inData){
     var pos = this.pos();
@@ -50,6 +54,8 @@ Crafty.sprite(1,"images/players.png", {
 
 Crafty.c("Chatty", {
   init: function(){
+    this.requires('DataDriven');
+
     var chatBox = Crafty.e('2D, DOM, Text, DataDriven, RightControls, SpriteAnimation')
       .rightControls(0)
       .css({
@@ -75,6 +81,10 @@ Crafty.c("Chatty", {
         }
       }
     }});
+
+    this.delegate(chatBox);
+    chatBox.delegate(this, {only: ['chat']});
+
     this.chatBox = chatBox;
     this.bind('Remove',function(){
       this.chatBox.destroy();
@@ -172,7 +182,7 @@ Crafty.c("Chatty", {
 Crafty.c("Avatar", {
   init: function() {
     this.requires("2D, DOM, SpriteAnimation, RightControls, Chatty, DataDriven");    
-    this.delegate(this.chatBox);
+
     
   },
   seedId: function(seedId) {
@@ -222,6 +232,11 @@ Crafty.c("Avatar", {
           this.applyPositionDataToEntity({data: {pos: {x: from.x, y:from.y}}});
         }
       })
+
+    var that = this;
+    this.delegate({fromData: function(inData){
+      that.applyPositionDataToEntity(inData);
+    }});
     
     return this;
   }
@@ -241,12 +256,11 @@ Crafty.c("RightControls", {
 Crafty.c('LocalAvatar', {
   init: function() {
     this.requires('Avatar')
+      .remoteControlled(false)
       .requires('Keyboard')
       .attr({z: 50})
       .rightControls(2)
       .bindChatKeys();
-
-    this.chatBox.delegate(this, {only: ['chat']});
 
     this.bind('NewDirection', function(direction){
       var outData = this.calculatePosData();
@@ -259,11 +273,8 @@ Crafty.c('LocalAvatar', {
 Crafty.c('RemoteAvatar', {
   init: function() {
     this.requires('Avatar')
+      .remoteControlled(true)
       .attr({z: 40}) //TODO: It seems to ignore this setting and still places in front of LocalAvatar
       .rightControls(0);
-    var that = this;
-    this.delegate({fromData: function(inData){
-      that.applyPositionDataToEntity(inData);
-    }});
   }
 })
