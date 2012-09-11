@@ -47,6 +47,7 @@ connection like mobile though.
 - Currently makes the viewport too large for mobile (fix is known, just need to get to it)
 - Chat is currently a bit awkward mainly due to it being parsed as HTML (d'oh)
 - User gets too much trust, they can currently arbitrarily set their position
+- Currently it fetches the room data after the "loading" screen has gone away, which can take up to around 10 seconds if the rooms server isn't spun up. This should happen in the loading screen with a more explanatory message.
 
 
 ### Features planned ###
