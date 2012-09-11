@@ -4,7 +4,11 @@ Crafty.scene("loading", function() {
 
   text.text("Loading").css({"text-align": "center", "color": "white", "font-size": "20px"});
 
-  Crafty.load(["/images/players.png"], function() {
+  var fullPlayersUrl = window.location.protocol+'//'+window.location.host;
+  fullPlayersUrl+= '/images/players.png';
+  //TODO: This is bullshit, there's got to be a better way to do this... Chrome breaks otherwise
+
+  Crafty.load([fullPlayersUrl], function() {
     Crafty.scene("main"); // When everything is loaded, run the main scene
   });
 });
@@ -33,11 +37,9 @@ Crafty.scene("main", function() {
     currentPlayerEntity.applyPositionDataToEntity(playerData);
   }
 
-  Crafty.socket = io.connect(document.URL);
+  Crafty.socket = io.connect(window.location.protocol+'//'+window.location.host);
 
-  // After Joining the server sends data with all the current players and their positions so the client loads them into the map.
-  // Don't set up listeners that depend on the knowledge of other players until this happens.
-  Crafty.socket.on("load_current_state", function(gameState) {
+  Crafty.socket.emit('fetch_room', {data: window.location.pathname.slice(1)}, function(gameState){
     if(currentPlayerId === undefined){
       generateMap(gameState.room);
 

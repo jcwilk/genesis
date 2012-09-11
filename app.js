@@ -4,8 +4,6 @@ var io = require('socket.io');
 var app = module.exports = express.createServer()
   , io = io.listen(app);
 
-app.use(express.static('./public', { maxAge: 604800 }))
-
 // Heroku doesn't support websockets
 io.configure(function() {
   io.set("transports", ["xhr-polling"]);
@@ -19,7 +17,7 @@ app.configure(function(){
   app.use(express.bodyParser());
   app.use(express.methodOverride());
   app.use(app.router);
-  app.use(express.static(__dirname + '/public'));
+  app.use(express.static('./public', { maxAge: 604800 }));
 });
 
 app.configure('development', function(){
@@ -47,15 +45,19 @@ var playerManager = require('./lib/playerManager').playerManagerFactory();
 
 var url = require('url');
 
-var fetchRoom = function(callback){
-  var defaultRoom = url.parse(process.env.DEFAULT_ROOM || 'http://localhost:3000/rooms/1234.json')
+var fetchRoom = function(roomPath, callback){
+  var defaultRoom = url.parse(process.env.DEFAULT_ROOM || 'http://localhost:3000/rooms/1234')
 
   var options = {
     host: defaultRoom.hostname,
     port: defaultRoom.port,
-    path: defaultRoom.path,
     method: 'GET'
   };
+  if(roomPath) {
+    options.path = '/rooms/'+roomPath;
+  } else {
+    options.path = defaultRoom.path;
+  }
 
   require('http').request(options, function(res) {
     console.log('STATUS: ' + res.statusCode);
@@ -70,7 +72,6 @@ var fetchRoom = function(callback){
   }).end();
 };
 
-
 io.sockets.on('connection', function(socket){
   var decoratePlayerData = function(newData){
     newData.id = player.id;
@@ -84,22 +85,24 @@ io.sockets.on('connection', function(socket){
     playerManager.destroy(player);
   });
 
-  fetchRoom(function(roomData){
-    player.fromData({data: {pos: roomData.room.spawn}});
-    player.delegate({fromData: function(newData){
-      socket.broadcast.emit("player_update", decoratePlayerData(newData));
-    }});
+  socket.on('fetch_room', function(roomPath,clientCallback){
+    fetchRoom(roomPath.data, function(roomData){
+      player.fromData({data: {pos: roomData.room.spawn}});
+      player.delegate({fromData: function(newData){
+        socket.broadcast.emit("player_update", decoratePlayerData(newData));
+      }});
 
-    socket.emit('load_current_state', {
-      players: playerManager.all(),
-      room: roomData.room,
-      currentPlayer: {
-        id: player.id
-      }
+      clientCallback({
+        players: playerManager.all(),
+        room: roomData.room,
+        currentPlayer: {
+          id: player.id
+        }
+      });
+
+      socket.on('new_data', function(playerData){
+        player.fromData(playerData);
+      });
     });
-    
-    socket.on('new_data', function(playerData){
-      player.fromData(playerData);
-    });
-  });  
+  });
 });

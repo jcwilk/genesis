@@ -3,7 +3,7 @@
 //Represents 8 players, 4 across 2 high
 //Each player has 4 rows of 3 images each
 //The center image of the top row is the best default image
-Crafty.sprite(1,"images/players.png", {
+Crafty.sprite(1,"/images/players.png", {
   player0: [32,0, 32, 48],
   player1: [32*4,0, 32, 48],
   player2: [32,48*4, 32, 48],
