@@ -41,7 +41,7 @@ if(app.address() !== null) {
 }
 
 // Events
-var playerManager = require('./lib/playerManager').playerManagerFactory();
+var playerManagerFactory = require('./lib/playerManager').playerManagerFactory;
 
 var url = require('url');
 
@@ -72,37 +72,70 @@ var fetchRoom = function(roomPath, callback){
   }).end();
 };
 
-io.sockets.on('connection', function(socket){
-  var decoratePlayerData = function(newData){
-    newData.id = player.id;
-    return newData;
-  }
+var roomIdToChannel = function(roomId){ return 'genesis_data_'+roomId }
 
-  var player = playerManager.create();
+var roomDataJar = {};
 
-  socket.on('disconnect', function () {
-    socket.broadcast.emit('player_quit', decoratePlayerData(player.toData()));
-    playerManager.destroy(player);
-  });
 
-  socket.on('fetch_room', function(roomPath,clientCallback){
-    fetchRoom(roomPath.data, function(roomData){
-      player.fromData({data: {pos: roomData.room.spawn}});
-      player.delegate({fromData: function(newData){
-        socket.broadcast.emit("player_update", decoratePlayerData(newData));
-      }});
+var roomInitializedFlags = {};
+var ensureRoomInitialized = function(roomId){
+  var roomChannel = roomIdToChannel(roomId),
+      playerManager = playerManagerFactory();
+  
+  var handleRoomConnection = function(dataSocket){
+    var decoratePlayerData = function(newData){
+      newData.id = player.id;
+      return newData;
+    }
+    
+    var player = playerManager.create();
 
-      clientCallback({
+    dataSocket.on('disconnect', function () {
+      dataSocket.broadcast.emit('player_quit', decoratePlayerData(player.toData()));
+      playerManager.destroy(player);
+    });
+
+    var onRoomData = function(roomData){
+      dataSocket.emit('init_room', {
         players: playerManager.all(),
         room: roomData.room,
+        dataChannel: 'genesis_data_'+roomId,
         currentPlayer: {
           id: player.id
         }
       });
+      
+      dataSocket.emit("player_update", decoratePlayerData({data: {pos: roomData.room.spawn}}));
 
-      socket.on('new_data', function(playerData){
-        player.fromData(playerData);
+      player.delegate({fromData: function(newData){
+        dataSocket.broadcast.emit("player_update", decoratePlayerData(newData));
+      }});
+    }
+
+    if(roomDataJar[roomId]){
+      onRoomData(roomDataJar[roomId]);
+    } else {
+      fetchRoom(roomId, function(roomData){
+        roomDataJar[roomId] = roomData;
+        onRoomData(roomData);
       });
+    }
+
+    dataSocket.on('new_data', function(playerData){
+      player.fromData(playerData);
     });
+  }
+
+  if(!roomInitializedFlags[roomId]){
+    roomInitializedFlags[roomId] = true;
+    io.of('/'+roomChannel).on('connection',handleRoomConnection);
+  }
+}
+
+io.sockets.on('connection', function(socket){
+  socket.on('fetch_room_channel', function(roomId,clientCallback){
+    ensureRoomInitialized(roomId);
+
+    clientCallback(roomIdToChannel(roomId));
   });
 });

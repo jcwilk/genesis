@@ -4,6 +4,7 @@ combining [Crafty.js](http://craftyjs.com) and [Socket.IO](http://socket.io/) to
 of a simple MMO. Currently the features are extremely limited (you can only walk around in a room and see others walking)
 but hopefully it will grow much beyond that. Your help would be appreciated towards that goal too. Feel free to file an issue, open a pull request, or to get in contact for help setting it up/deploying it/whatever. Note that this is currently entirely free (as in speech and beer, since it runs on heroku).
 
+
 ### Dev setup ###
 You need to install nodejs and ought to install npm.
 
@@ -25,6 +26,7 @@ Also, this now works on heroku. Just run something like the following commands t
     heroku logs (look for "State changed from starting to up" at the end)
     heroku open (or just go to the url in your web browser from the output of those commands)
 
+
 #### Heroku limitations ####
 - AFAIK heroku doesn't currently support websockets so I have it limited to xhr long polling, which, as long as
 you're not continuously streaming data, isn't bad at all. I could imagine it having a noticable impact on a sketchy
@@ -41,6 +43,7 @@ connection like mobile though.
 - Collision detection with walls
 - Room data stored/generated from a [secondary server](http://www.github.com/jcwilk/genesis-rooms)
 - Room data retrieved on player connect and forwarded to the client by the genesis server
+- Player updates only sent to players in the same room
 
 
 ### Known bugs ###
@@ -68,6 +71,7 @@ connection like mobile though.
 - gem install guard-jasmine-node (requires ruby)
 - guard (from project root, will autotest and libnotify/growl)
 - Note that this is a little buggy/finicky. YMMV but having coffeescript specs with autotest and libnotify is freaking sweet. If you can't get it to work though, just use ```jasmine-node spec```, the binary is in node_modules
+
 
 ### Pull request dogma ###
 - Make a branch and get it in sync with master of this repo (either rebase or cherry pick)
