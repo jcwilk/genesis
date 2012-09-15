@@ -14,7 +14,7 @@ var generateMap = function(roomData) {
       tilemap = roomData.tilemaps[i];
 
       // Turn the sprite map into usable components
-      Crafty.sprite(32, tilemap.url, tilemap.components);
+      Crafty.sprite(roomData.tileDimensions.x, tilemap.url, tilemap.components);
     }
 
     for(var i = 0; i < roomData.tiles.length; i++){
