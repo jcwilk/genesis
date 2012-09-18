@@ -108,5 +108,5 @@ Crafty.scene("main", function() {
   }
 
   io.connect(window.location.protocol+'//'+window.location.host)
-    .emit('fetch_room_channel', window.location.pathname.slice(1), connectDataSocket);
+    .emit('fetch_room_channel', window.location.pathname.slice(7), connectDataSocket);
 });
