@@ -4,6 +4,6 @@ module.exports = function(app){
   });
 
   app.get('/', function(req,res){
-    res.redirect((process.env.BASE_ROOM_URL||'http://localhost:3000')+'/rooms');
+    res.redirect(app.remoteUrls.roomsIndex);
   });
 };

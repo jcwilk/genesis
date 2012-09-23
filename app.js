@@ -28,6 +28,8 @@ app.configure('production', function(){
   app.use(express.errorHandler());
 });
 
+app.remoteUrls = {roomsIndex: (process.env.BASE_ROOM_URL||'http://localhost:3000')+'/rooms'}
+
 // Routes
 require('./routes/site')(app);
 
@@ -75,7 +77,6 @@ var fetchRoom = function(roomPath, callback){
 var roomIdToChannel = function(roomId){ return 'genesis_data_'+roomId }
 
 var roomDataJar = {};
-
 
 var roomInitializedFlags = {};
 var ensureRoomInitialized = function(roomId){
